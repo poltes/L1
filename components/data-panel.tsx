@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Upload, FileText, Database, Trash2, Eye, BarChart3, Code } from 'lucide-react'
+import { Upload, FileText, Database, Trash2, Eye, BarChart3, Code, Menu, Sun, Moon, Settings, Bot } from 'lucide-react'
 import { toast } from 'sonner'
 import { DataVisualizations } from '@/components/data-visualizations'
 import { PythonSandbox } from '@/components/python-sandbox'
@@ -25,10 +25,19 @@ interface DataPanelProps {
   setUploadedFiles: (files: UploadedFile[] | ((prev: UploadedFile[]) => UploadedFile[])) => void
   selectedFile: UploadedFile | null
   setSelectedFile: (file: UploadedFile | null) => void
+  isCollapsed: boolean
+  onToggleCollapse: () => void
 }
 
-export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSelectedFile }: DataPanelProps) {
+export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSelectedFile, isCollapsed, onToggleCollapse }: DataPanelProps) {
   const [isDragging, setIsDragging] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') === 'dark' || 
+             (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    }
+    return false
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -150,10 +159,106 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
     toast.success('File deleted')
   }
 
+  const toggleTheme = () => {
+    const newTheme = isDarkMode ? 'light' : 'dark'
+    setIsDarkMode(!isDarkMode)
+    localStorage.setItem('theme', newTheme)
+    document.documentElement.classList.toggle('dark', !isDarkMode)
+  }
+
+  if (isCollapsed) {
+    return (
+      <div className="h-full flex flex-col bg-background">
+        <div className="p-3 border-b">
+          <div className="flex flex-col items-center space-y-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleCollapse}
+              className="w-8 h-8 p-0"
+              title="Expand panel"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="w-8 h-8 p-0"
+              title="Toggle theme"
+            >
+              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-8 h-8 p-0"
+              title="Gemini model settings"
+            >
+              <Bot className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-8 h-8 p-0"
+              title="Settings"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center p-2">
+          <div className="text-center">
+            <FileText className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">{uploadedFiles.length}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-6 border-b">
-        <h2 className="text-xl font-semibold mb-4">Data Analysis Hub</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Data Analysis Hub</h2>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="w-8 h-8 p-0"
+              title="Toggle theme"
+            >
+              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-8 h-8 p-0"
+              title="Gemini model settings"
+            >
+              <Bot className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-8 h-8 p-0"
+              title="Settings"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleCollapse}
+              className="w-8 h-8 p-0"
+              title="Collapse panel"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
         
         <div
           className={`border-2 border-dashed rounded-lg p-6 transition-colors ${

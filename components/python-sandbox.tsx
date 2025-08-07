@@ -27,33 +27,46 @@ const STATISTICAL_TEMPLATES = {
   frequency: {
     name: "Frequency Analysis",
     icon: BarChart3,
-    code: `# Frequency Analysis
+    code: `# Frequency Analysis - Works with any uploaded data
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 print("=== FREQUENCY ANALYSIS ===\\n")
 
-# Get categorical columns
-categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
-print(f"Categorical columns found: {categorical_cols}\\n")
-
-for col in categorical_cols[:3]:  # Analyze first 3 categorical columns
-    print(f"--- Frequency analysis for '{col}' ---")
-    freq = df[col].value_counts()
-    print(freq)
-    print(f"\\nPercentages:")
-    print((df[col].value_counts(normalize=True) * 100).round(2))
-    print("\\n")
+# Check if data is available
+if 'df' not in locals():
+    print("No data available. Please upload a file first.")
+else:
+    print(f"Dataset shape: {df.shape}")
     
-    # Create visualization
-    plt.figure(figsize=(10, 6))
-    freq.plot(kind='bar')
-    plt.title(f'Frequency Distribution of {col}')
-    plt.xlabel(col)
-    plt.ylabel('Frequency')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
+    # Get categorical columns
+    categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+    print(f"Categorical columns found: {categorical_cols}\\n")
+    
+    if not categorical_cols:
+        print("No categorical columns found in the dataset.")
+        print("Available columns:", list(df.columns))
+    else:
+        for col in categorical_cols[:3]:  # Analyze first 3 categorical columns
+            print(f"--- Frequency analysis for '{col}' ---")
+            freq = df[col].value_counts()
+            print(freq)
+            print(f"\\nPercentages:")
+            print((df[col].value_counts(normalize=True) * 100).round(2))
+            print("\\n")
+            
+            # Create visualization if matplotlib is available
+            try:
+                plt.figure(figsize=(10, 6))
+                freq.plot(kind='bar')
+                plt.title(f'Frequency Distribution of {col}')
+                plt.xlabel(col)
+                plt.ylabel('Frequency')
+                plt.xticks(rotation=45)
+                plt.tight_layout()
+                plt.show()
+            except Exception as e:
+                print(f"Could not create visualization: {e}")
 
 print("Frequency analysis completed!")
 `
@@ -61,53 +74,63 @@ print("Frequency analysis completed!")
   descriptive: {
     name: "Descriptive Statistics",
     icon: Calculator,
-    code: `# Descriptive Statistics Analysis
+    code: `# Descriptive Statistics Analysis - Works with any uploaded data
 import numpy as np
 
 print("=== DESCRIPTIVE STATISTICS ===\\n")
 
-# Basic info about the dataset
-print("Dataset Info:")
-print(f"Shape: {df.shape}")
-print(f"Columns: {list(df.columns)}")
-print(f"Data types:\\n{df.dtypes}\\n")
-
-# Numerical columns analysis
-numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-print(f"Numerical columns: {numerical_cols}\\n")
-
-if numerical_cols:
-    print("--- Descriptive Statistics for Numerical Columns ---")
-    desc_stats = df[numerical_cols].describe()
-    print(desc_stats)
-    print("\\n")
+# Check if data is available
+if 'df' not in locals():
+    print("No data available. Please upload a file first.")
+else:
+    # Basic info about the dataset
+    print("Dataset Info:")
+    print(f"Shape: {df.shape}")
+    print(f"Columns: {list(df.columns)}")
+    print(f"Data types:\\n{df.dtypes}\\n")
     
-    # Additional statistics
-    print("--- Additional Statistics ---")
-    for col in numerical_cols:
-        print(f"{col}:")
-        print(f"  Mode: {df[col].mode().iloc[0] if len(df[col].mode()) > 0 else 'No mode'}")
-        print(f"  Variance: {df[col].var():.4f}")
-        print(f"  Skewness: {df[col].skew():.4f}")
-        print(f"  Kurtosis: {df[col].kurtosis():.4f}")
-        print(f"  Missing values: {df[col].isnull().sum()}")
-        print()
-
-# Correlation matrix for numerical data
-if len(numerical_cols) > 1:
-    print("--- Correlation Matrix ---")
-    correlation_matrix = df[numerical_cols].corr()
-    print(correlation_matrix)
+    # Numerical columns analysis
+    numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    print(f"Numerical columns: {numerical_cols}\\n")
     
-    # Visualize correlation matrix
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+    if not numerical_cols:
+        print("No numerical columns found in the dataset.")
+        print("Available columns:", list(df.columns))
+    else:
+        print("--- Descriptive Statistics for Numerical Columns ---")
+        desc_stats = df[numerical_cols].describe()
+        print(desc_stats)
+        print("\\n")
+        
+        # Additional statistics
+        print("--- Additional Statistics ---")
+        for col in numerical_cols:
+            print(f"{col}:")
+            print(f"  Mode: {df[col].mode().iloc[0] if len(df[col].mode()) > 0 else 'No mode'}")
+            print(f"  Variance: {df[col].var():.4f}")
+            print(f"  Skewness: {df[col].skew():.4f}")
+            print(f"  Kurtosis: {df[col].kurtosis():.4f}")
+            print(f"  Missing values: {df[col].isnull().sum()}")
+            print()
     
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0)
-    plt.title('Correlation Matrix')
-    plt.tight_layout()
-    plt.show()
+        # Correlation matrix for numerical data
+        if len(numerical_cols) > 1:
+            print("--- Correlation Matrix ---")
+            correlation_matrix = df[numerical_cols].corr()
+            print(correlation_matrix)
+            
+            # Visualize correlation matrix if matplotlib is available
+            try:
+                import matplotlib.pyplot as plt
+                import seaborn as sns
+                
+                plt.figure(figsize=(10, 8))
+                sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0)
+                plt.title('Correlation Matrix')
+                plt.tight_layout()
+                plt.show()
+            except Exception as e:
+                print(f"Could not create visualization: {e}")
 
 print("\\nDescriptive analysis completed!")
 `
@@ -115,85 +138,101 @@ print("\\nDescriptive analysis completed!")
   ttest: {
     name: "T-Test Analysis",
     icon: TrendingUp,
-    code: `# T-Test Analysis
+    code: `# T-Test Analysis - Works with any uploaded data
 from scipy import stats
 import numpy as np
-import matplotlib.pyplot as plt
 
 print("=== T-TEST ANALYSIS ===\\n")
 
-# Get numerical columns
-numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
-
-if len(numerical_cols) == 0:
-    print("No numerical columns found for t-test analysis.")
+# Check if data is available
+if 'df' not in locals():
+    print("No data available. Please upload a file first.")
 else:
-    print(f"Numerical columns available: {numerical_cols}")
-    print(f"Categorical columns available: {categorical_cols}\\n")
+    # Get numerical columns
+    numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
     
-    # One-sample t-test (testing if mean is significantly different from 0)
-    if numerical_cols:
-        first_num_col = numerical_cols[0]
-        print(f"--- One-sample t-test for '{first_num_col}' ---")
-        print(f"Testing if mean of '{first_num_col}' is significantly different from 0")
+    if len(numerical_cols) == 0:
+        print("No numerical columns found for t-test analysis.")
+        print("Available columns:", list(df.columns))
+    else:
+        print(f"Numerical columns available: {numerical_cols}")
+        print(f"Categorical columns available: {categorical_cols}\\n")
         
-        sample_data = df[first_num_col].dropna()
-        t_stat, p_value = stats.ttest_1samp(sample_data, 0)
-        
-        print(f"Sample mean: {sample_data.mean():.4f}")
-        print(f"Sample std: {sample_data.std():.4f}")
-        print(f"T-statistic: {t_stat:.4f}")
-        print(f"P-value: {p_value:.4f}")
-        print(f"Significant at α=0.05: {'Yes' if p_value < 0.05 else 'No'}\\n")
-    
-    # Two-sample t-test (if we have categorical variable to group by)
-    if len(numerical_cols) >= 1 and len(categorical_cols) >= 1:
-        num_col = numerical_cols[0]
-        cat_col = categorical_cols[0]
-        
-        unique_categories = df[cat_col].unique()
-        if len(unique_categories) >= 2:
-            print(f"--- Two-sample t-test: '{num_col}' by '{cat_col}' ---")
+        # One-sample t-test (testing if mean is significantly different from 0)
+        if numerical_cols:
+            first_num_col = numerical_cols[0]
+            print(f"--- One-sample t-test for '{first_num_col}' ---")
+            print(f"Testing if mean of '{first_num_col}' is significantly different from 0")
             
-            # Take first two categories
-            cat1, cat2 = unique_categories[0], unique_categories[1]
-            group1 = df[df[cat_col] == cat1][num_col].dropna()
-            group2 = df[df[cat_col] == cat2][num_col].dropna()
-            
-            print(f"Group 1 ({cat1}): n={len(group1)}, mean={group1.mean():.4f}, std={group1.std():.4f}")
-            print(f"Group 2 ({cat2}): n={len(group2)}, mean={group2.mean():.4f}, std={group2.std():.4f}")
-            
-            # Perform independent t-test
-            t_stat, p_value = stats.ttest_ind(group1, group2)
-            
-            print(f"\\nT-statistic: {t_stat:.4f}")
-            print(f"P-value: {p_value:.4f}")
-            print(f"Significant difference at α=0.05: {'Yes' if p_value < 0.05 else 'No'}")
-            
-            # Effect size (Cohen's d)
-            pooled_std = np.sqrt(((len(group1)-1)*group1.var() + (len(group2)-1)*group2.var()) / (len(group1)+len(group2)-2))
-            cohens_d = (group1.mean() - group2.mean()) / pooled_std
-            print(f"Cohen's d (effect size): {cohens_d:.4f}")
-            
-            # Interpretation
-            if abs(cohens_d) < 0.2:
-                effect_size = "small"
-            elif abs(cohens_d) < 0.5:
-                effect_size = "small to medium"
-            elif abs(cohens_d) < 0.8:
-                effect_size = "medium to large"
+            sample_data = df[first_num_col].dropna()
+            if len(sample_data) > 1:
+                t_stat, p_value = stats.ttest_1samp(sample_data, 0)
+                
+                print(f"Sample mean: {sample_data.mean():.4f}")
+                print(f"Sample std: {sample_data.std():.4f}")
+                print(f"T-statistic: {t_stat:.4f}")
+                print(f"P-value: {p_value:.4f}")
+                print(f"Significant at α=0.05: {'Yes' if p_value < 0.05 else 'No'}\\n")
             else:
-                effect_size = "large"
-            print(f"Effect size interpretation: {effect_size}\\n")
+                print("Not enough data points for t-test\\n")
+        
+        # Two-sample t-test (if we have categorical variable to group by)
+        if len(numerical_cols) >= 1 and len(categorical_cols) >= 1:
+            num_col = numerical_cols[0]
+            cat_col = categorical_cols[0]
             
-            # Visualize the comparison
-            plt.figure(figsize=(10, 6))
-            plt.boxplot([group1, group2], labels=[cat1, cat2])
-            plt.title(f'{num_col} by {cat_col}')
-            plt.ylabel(num_col)
-            plt.grid(True, alpha=0.3)
-            plt.show()
+            unique_categories = df[cat_col].unique()
+            if len(unique_categories) >= 2:
+                print(f"--- Two-sample t-test: '{num_col}' by '{cat_col}' ---")
+                
+                # Take first two categories
+                cat1, cat2 = unique_categories[0], unique_categories[1]
+                group1 = df[df[cat_col] == cat1][num_col].dropna()
+                group2 = df[df[cat_col] == cat2][num_col].dropna()
+                
+                if len(group1) > 1 and len(group2) > 1:
+                    print(f"Group 1 ({cat1}): n={len(group1)}, mean={group1.mean():.4f}, std={group1.std():.4f}")
+                    print(f"Group 2 ({cat2}): n={len(group2)}, mean={group2.mean():.4f}, std={group2.std():.4f}")
+                    
+                    # Perform independent t-test
+                    t_stat, p_value = stats.ttest_ind(group1, group2)
+                    
+                    print(f"\\nT-statistic: {t_stat:.4f}")
+                    print(f"P-value: {p_value:.4f}")
+                    print(f"Significant difference at α=0.05: {'Yes' if p_value < 0.05 else 'No'}")
+                    
+                    # Effect size (Cohen's d)
+                    pooled_std = np.sqrt(((len(group1)-1)*group1.var() + (len(group2)-1)*group2.var()) / (len(group1)+len(group2)-2))
+                    cohens_d = (group1.mean() - group2.mean()) / pooled_std
+                    print(f"Cohen's d (effect size): {cohens_d:.4f}")
+                    
+                    # Interpretation
+                    if abs(cohens_d) < 0.2:
+                        effect_size = "small"
+                    elif abs(cohens_d) < 0.5:
+                        effect_size = "small to medium"
+                    elif abs(cohens_d) < 0.8:
+                        effect_size = "medium to large"
+                    else:
+                        effect_size = "large"
+                    print(f"Effect size interpretation: {effect_size}\\n")
+                    
+                    # Visualize the comparison if matplotlib is available
+                    try:
+                        import matplotlib.pyplot as plt
+                        plt.figure(figsize=(10, 6))
+                        plt.boxplot([group1, group2], labels=[cat1, cat2])
+                        plt.title(f'{num_col} by {cat_col}')
+                        plt.ylabel(num_col)
+                        plt.grid(True, alpha=0.3)
+                        plt.show()
+                    except Exception as e:
+                        print(f"Could not create visualization: {e}")
+                else:
+                    print("Not enough data points in groups for t-test")
+            else:
+                print("Not enough categories for two-sample t-test")
 
 print("T-test analysis completed!")
 `
