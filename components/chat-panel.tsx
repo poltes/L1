@@ -6,8 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { MessageSquare, Send, Bot, User, FileText, BarChart3 } from 'lucide-react'
+import { MessageSquare, Send, Bot, User, FileText, BarChart3, Settings, Key } from 'lucide-react'
 import { toast } from 'sonner'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 interface UploadedFile {
   id: string
@@ -34,6 +38,10 @@ export function ChatPanel({ selectedFile }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash')
+  const [apiKey, setApiKey] = useState('')
+  const [tempApiKey, setTempApiKey] = useState('')
+  const [isConfigOpen, setIsConfigOpen] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -42,6 +50,14 @@ export function ChatPanel({ selectedFile }: ChatPanelProps) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
     }
   }, [messages])
+
+  useEffect(() => {
+    // Load saved API key and model from localStorage
+    const savedApiKey = localStorage.getItem('gemini-api-key') || ''
+    const savedModel = localStorage.getItem('gemini-model') || 'gemini-1.5-flash'
+    setApiKey(savedApiKey)
+    setSelectedModel(savedModel)
+  }, [])
 
   useEffect(() => {
     if (selectedFile) {
@@ -92,7 +108,9 @@ What would you like to know about your data?`,
         body: JSON.stringify({
           message: inputMessage,
           fileData: selectedFile.data,
-          fileName: selectedFile.name
+          fileName: selectedFile.name,
+          model: selectedModel,
+          apiKey: apiKey
         })
       })
 
@@ -124,6 +142,25 @@ What would you like to know about your data?`,
       e.preventDefault()
       sendMessage()
     }
+  }
+
+  const handleModelChange = (value: string) => {
+    setSelectedModel(value)
+    localStorage.setItem('gemini-model', value)
+    toast.success(`Model changed to ${value}`)
+  }
+
+  const handleApiKeySubmit = () => {
+    setApiKey(tempApiKey)
+    localStorage.setItem('gemini-api-key', tempApiKey)
+    setIsConfigOpen(false)
+    setTempApiKey('')
+    toast.success('API key updated successfully!')
+  }
+
+  const handleConfigOpen = () => {
+    setTempApiKey(apiKey)
+    setIsConfigOpen(true)
   }
 
   const getDataPreview = () => {
@@ -167,12 +204,91 @@ What would you like to know about your data?`,
             <MessageSquare className="h-5 w-5" />
             AI Data Analysis Chat
           </h2>
-          {selectedFile && (
-            <Badge variant="outline" className="flex items-center gap-1">
-              <BarChart3 className="h-3 w-3" />
-              {selectedFile.name}
-            </Badge>
-          )}
+          <div className="flex items-center gap-3">
+            {selectedFile && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <BarChart3 className="h-3 w-3" />
+                {selectedFile.name}
+              </Badge>
+            )}
+            
+            <div className="flex items-center gap-2">
+              <Select value={selectedModel} onValueChange={handleModelChange}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Select model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
+                  <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
+                  <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleConfigOpen}
+                    className="flex items-center gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <Key className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Configure Gemini AI</DialogTitle>
+                    <DialogDescription>
+                      Add your Google Gemini API key to enable AI-powered data analysis. 
+                      You can get an API key from{' '}
+                      <a 
+                        href="https://makersuite.google.com/app/apikey" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        Google AI Studio
+                      </a>.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="api-key" className="text-right">
+                        API Key
+                      </Label>
+                      <Input
+                        id="api-key"
+                        type="password"
+                        placeholder="Enter your Gemini API key"
+                        value={tempApiKey}
+                        onChange={(e) => setTempApiKey(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label className="text-right text-sm text-muted-foreground">
+                        Status
+                      </Label>
+                      <div className="col-span-3">
+                        <Badge variant={apiKey ? "default" : "secondary"}>
+                          {apiKey ? "Configured" : "Not configured"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button 
+                      onClick={handleApiKeySubmit}
+                      disabled={!tempApiKey.trim()}
+                    >
+                      Save Configuration
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
         </div>
       </div>
 

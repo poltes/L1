@@ -1,20 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextRequest, NextResponse } from 'next/server'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-
 export async function POST(request: NextRequest) {
   try {
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json(
-        { 
-          response: "I'm not configured yet! Please add your GEMINI_API_KEY to the environment variables to enable AI-powered data analysis. You can get an API key from Google AI Studio (https://makersuite.google.com/app/apikey)." 
-        },
-        { status: 200 }
-      )
-    }
-
-    const { message, fileData, fileName } = await request.json()
+    const { message, fileData, fileName, model: selectedModel = 'gemini-1.5-flash', apiKey } = await request.json()
 
     if (!message) {
       return NextResponse.json(
@@ -23,7 +12,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    // Use client-provided API key or fallback to environment variable
+    const effectiveApiKey = apiKey || process.env.GEMINI_API_KEY
+    
+    if (!effectiveApiKey) {
+      return NextResponse.json(
+        { 
+          response: "I'm not configured yet! Please add your GEMINI_API_KEY using the configuration dialog (gear icon) or set the GEMINI_API_KEY environment variable. You can get an API key from Google AI Studio (https://makersuite.google.com/app/apikey)." 
+        },
+        { status: 200 }
+      )
+    }
+
+    const genAI = new GoogleGenerativeAI(effectiveApiKey)
+    const model = genAI.getGenerativeModel({ model: selectedModel })
 
     // Prepare context about the data
     let dataContext = ''
