@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Upload, FileText, Database, Trash2, Eye, BarChart3 } from 'lucide-react'
+import { Upload, FileText, Database, Trash2, Eye, BarChart3, Code } from 'lucide-react'
 import { toast } from 'sonner'
 import { DataVisualizations } from '@/components/data-visualizations'
+import { PythonSandbox } from '@/components/python-sandbox'
 
 interface UploadedFile {
   id: string
@@ -193,7 +194,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
       <div className="flex-1 overflow-hidden">
         <Tabs defaultValue="files" className="h-full flex flex-col">
           <div className="px-6 pt-4">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="files" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Files ({uploadedFiles.length})
@@ -201,6 +202,10 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
               <TabsTrigger value="visualizations" className="flex items-center gap-2" disabled={!selectedFile}>
                 <BarChart3 className="h-4 w-4" />
                 Charts
+              </TabsTrigger>
+              <TabsTrigger value="python" className="flex items-center gap-2">
+                <Code className="h-4 w-4" />
+                Python
               </TabsTrigger>
             </TabsList>
           </div>
@@ -283,6 +288,10 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                 </div>
               )}
             </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="python" className="flex-1 overflow-hidden">
+            <PythonSandbox selectedFile={selectedFile} />
           </TabsContent>
         </Tabs>
       </div>

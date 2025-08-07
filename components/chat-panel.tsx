@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 
 interface UploadedFile {
   id: string
@@ -42,6 +43,8 @@ export function ChatPanel({ selectedFile }: ChatPanelProps) {
   const [apiKey, setApiKey] = useState('')
   const [tempApiKey, setTempApiKey] = useState('')
   const [isConfigOpen, setIsConfigOpen] = useState(false)
+  const [pythonOutput, setPythonOutput] = useState<string | null>(null)
+  const [isExecutingCode, setIsExecutingCode] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -161,6 +164,52 @@ What would you like to know about your data?`,
   const handleConfigOpen = () => {
     setTempApiKey(apiKey)
     setIsConfigOpen(true)
+  }
+
+  const handleRunPythonCode = async (code: string, language: string) => {
+    if (language !== 'python' && language !== 'py') {
+      toast.error('Only Python code execution is supported')
+      return
+    }
+
+    setIsExecutingCode(true)
+    setPythonOutput(null)
+
+    try {
+      const response = await fetch('/api/execute-python', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: code,
+          fileName: selectedFile?.name || 'user_data',
+          fileData: selectedFile?.data || []
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to execute Python code')
+      }
+
+      const result = await response.json()
+      
+      const outputMessage: Message = {
+        id: Date.now().toString(),
+        type: 'assistant',
+        content: `**Code Execution Result:**\n\n\`\`\`\n${result.output}\n\`\`\`\n\n${result.error ? `**Error:**\n\`\`\`\n${result.error}\n\`\`\`` : ''}`,
+        timestamp: new Date(),
+        fileContext: selectedFile?.name
+      }
+
+      setMessages(prev => [...prev, outputMessage])
+      toast.success('Code executed successfully!')
+    } catch (error) {
+      toast.error('Failed to execute Python code')
+      console.error('Python execution error:', error)
+    } finally {
+      setIsExecutingCode(false)
+    }
   }
 
   const getDataPreview = () => {
@@ -326,7 +375,14 @@ What would you like to know about your data?`,
                             : 'bg-muted'
                         }`}
                       >
-                        <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                        {message.type === 'assistant' ? (
+                          <MarkdownRenderer 
+                            content={message.content} 
+                            onRunCode={handleRunPythonCode}
+                          />
+                        ) : (
+                          <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                        )}
                         <div className={`text-xs mt-2 opacity-70 ${
                           message.type === 'user' ? 'text-right' : 'text-left'
                         }`}>

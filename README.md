@@ -29,6 +29,16 @@ A modern, AI-powered data analysis platform that allows users to upload datasets
 - **Contextual Responses**: AI understands your dataset structure and content
 - **Statistical Insights**: Automatic generation of trends, patterns, and recommendations
 - **Smart Analysis**: Handles both numeric and categorical data analysis
+- **Markdown Rendering**: Properly formatted AI responses with syntax highlighting
+- **Code Execution**: Run Python code directly from AI responses with visual output
+
+### Python Code Sandbox
+- **Interactive Python Environment**: Execute Python code with your uploaded data
+- **Statistical Templates**: Pre-built templates for frequency analysis, descriptive statistics, and t-tests  
+- **Code Syntax Highlighting**: Professional code editor with Python syntax highlighting
+- **Real-time Execution**: Run code using your local Python installation
+- **Data Integration**: Uploaded data automatically available as pandas DataFrame ('df')
+- **Copy & Run**: Copy code from AI responses and execute with one click
 
 ## 🛠️ Technology Stack
 
@@ -39,11 +49,14 @@ A modern, AI-powered data analysis platform that allows users to upload datasets
 - **State Management**: React hooks (useState, useRef)
 - **File Processing**: Client-side CSV/JSON parsing
 - **Notifications**: Sonner toast library
+- **Markdown Rendering**: React Markdown with syntax highlighting
+- **Code Execution**: Node.js child_process for Python execution
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 18+ installed
+- Python 3.7+ installed (for code execution in Python Sandbox)
 - Google Gemini AI API key (optional but recommended for full functionality)
 
 ### Installation
@@ -109,12 +122,24 @@ npm start
   - "What insights can you find in the sales data?"
 - **Get AI Insights**: Receive detailed analysis, patterns, and recommendations
 
+### 4. Python Code Sandbox
+- **Access Python Tab**: Click the "Python" tab in the left panel
+- **Load Templates**: Choose from pre-built statistical analysis templates:
+  - **Frequency Analysis**: Analyze categorical data distributions
+  - **Descriptive Statistics**: Generate comprehensive statistical summaries  
+  - **T-Test Analysis**: Perform statistical hypothesis testing
+- **Write Custom Code**: Use the code editor to write your own Python analysis
+- **Execute Code**: Click "Run Code" to execute using your local Python installation
+- **View Results**: See output, charts, and any errors in the results panel
+
 ### Example Queries
 - "What's the average value in the price column?"
 - "How many unique categories are there?"
 - "What are the top 5 performers in this dataset?"
 - "Can you identify any outliers or anomalies?"
 - "What trends do you see over time?"
+- "Can you provide Python code for frequency analysis?"
+- "Generate descriptive statistics code for this data"
 
 ## 🎨 UI Components
 
