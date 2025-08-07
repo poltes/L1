@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Upload, FileText, Database, Trash2, Eye, BarChart3, Code, Menu, Sun, Moon, Settings, Bot } from 'lucide-react'
+import { Upload, FileText, Database, Trash2, Eye, BarChart3, Code, Menu, Sun, Moon, Settings, Bot, Table } from 'lucide-react'
 import { toast } from 'sonner'
 import { DataVisualizations } from '@/components/data-visualizations'
 import { PythonSandbox } from '@/components/python-sandbox'
+import { SPSSDataView } from '@/components/spss-data-view'
 
 interface UploadedFile {
   id: string
@@ -38,6 +39,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
     }
     return false
   })
+  const [showDataView, setShowDataView] = useState<UploadedFile | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -164,6 +166,17 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
     setIsDarkMode(!isDarkMode)
     localStorage.setItem('theme', newTheme)
     document.documentElement.classList.toggle('dark', !isDarkMode)
+  }
+
+  const handleDataViewSave = (updatedData: any[], variables: any) => {
+    if (showDataView) {
+      const updatedFile = { ...showDataView, data: updatedData }
+      setUploadedFiles(prev => prev.map(f => f.id === updatedFile.id ? updatedFile : f))
+      if (selectedFile?.id === updatedFile.id) {
+        setSelectedFile(updatedFile)
+      }
+      setShowDataView(null)
+    }
   }
 
   if (isCollapsed) {
@@ -351,6 +364,17 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation()
+                              setShowDataView(file)
+                            }}
+                            title="SPSS Data View"
+                          >
+                            <Table className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
                               setSelectedFile(file)
                             }}
                           >
@@ -400,6 +424,15 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* SPSS Data View Modal */}
+      {showDataView && (
+        <SPSSDataView
+          file={showDataView}
+          onClose={() => setShowDataView(null)}
+          onSave={handleDataViewSave}
+        />
+      )}
     </div>
   )
 }

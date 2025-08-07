@@ -17,6 +17,7 @@ A modern, AI-powered data analysis platform that allows users to upload datasets
 - **Automatic Data Parsing**: Smart detection of data types and structure
 - **Statistical Analysis**: Automatic generation of summary statistics
 - **Data Preview**: Quick overview of dataset structure and sample data
+- **SPSS-Style Data Editor**: Professional data and variable view for editing incomplete data and labeling variables
 
 ### Visualizations
 - **Interactive Charts**: Bar charts, pie charts, line graphs using Recharts
@@ -106,6 +107,10 @@ npm start
 
 ### 2. Explore Your Data
 - **Files Tab**: View all uploaded files with metadata (rows, size, upload time)
+- **SPSS Data View**: Click the table icon on any file to open professional data editor with:
+  - **Data View**: Edit cells directly, add/delete rows and variables
+  - **Variable View**: Configure data types, labels, missing values, and measurement scales
+  - **Export**: Save edited data as CSV files
 - **Charts Tab**: Automatic visualizations including:
   - Statistical summaries
   - Data preview tables
