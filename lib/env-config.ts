@@ -1,6 +1,11 @@
 // IMPORTANT: When adding new env variables to the codebase, update this array
 export const ENV_VARIABLES: EnvVariable[] = [
-  // Add your active environment variables here
+  {
+    name: "GEMINI_API_KEY",
+    description: "Google Gemini AI API key for natural language data analysis",
+    required: false,
+    instructions: "Go to [Google AI Studio](https://makersuite.google.com/app/apikey) → Create API key → Copy the key. This enables AI-powered data analysis capabilities."
+  }
 ];
 
 // SUPABASE/DATABASE VARIABLES (uncomment and add to ENV_VARIABLES array when adding database features)
