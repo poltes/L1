@@ -28,9 +28,10 @@ interface DataPanelProps {
   setSelectedFile: (file: UploadedFile | null) => void
   isCollapsed: boolean
   onToggleCollapse: () => void
+  onShowDataView: (file: UploadedFile) => void
 }
 
-export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSelectedFile, isCollapsed, onToggleCollapse }: DataPanelProps) {
+export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSelectedFile, isCollapsed, onToggleCollapse, onShowDataView }: DataPanelProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -39,7 +40,6 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
     }
     return false
   })
-  const [showDataView, setShowDataView] = useState<UploadedFile | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -168,16 +168,6 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
     document.documentElement.classList.toggle('dark', !isDarkMode)
   }
 
-  const handleDataViewSave = (updatedData: any[], variables: any) => {
-    if (showDataView) {
-      const updatedFile = { ...showDataView, data: updatedData }
-      setUploadedFiles(prev => prev.map(f => f.id === updatedFile.id ? updatedFile : f))
-      if (selectedFile?.id === updatedFile.id) {
-        setSelectedFile(updatedFile)
-      }
-      setShowDataView(null)
-    }
-  }
 
   if (isCollapsed) {
     return (
@@ -364,7 +354,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation()
-                              setShowDataView(file)
+                              onShowDataView(file)
                             }}
                             title="SPSS Data View"
                           >
@@ -425,16 +415,6 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
         </Tabs>
       </div>
 
-      {/* SPSS Data View - Full Panel */}
-      {showDataView && (
-        <div className="absolute inset-0 bg-background z-10">
-          <SPSSDataView
-            file={showDataView}
-            onClose={() => setShowDataView(null)}
-            onSave={handleDataViewSave}
-          />
-        </div>
-      )}
     </div>
   )
 }

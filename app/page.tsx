@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { DataPanel } from '@/components/data-panel'
 import { ChatPanel } from '@/components/chat-panel'
+import { SPSSDataView } from '@/components/spss-data-view'
 
 interface UploadedFile {
   id: string
@@ -17,6 +18,31 @@ export default function Home() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null)
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false)
+  const [showDataView, setShowDataView] = useState<UploadedFile | null>(null)
+
+  const handleDataViewSave = (updatedData: any[], variables: any) => {
+    if (showDataView) {
+      const updatedFile = { ...showDataView, data: updatedData }
+      setUploadedFiles(prev => prev.map(f => f.id === updatedFile.id ? updatedFile : f))
+      if (selectedFile?.id === updatedFile.id) {
+        setSelectedFile(updatedFile)
+      }
+      setShowDataView(null)
+    }
+  }
+
+  // Show SPSS Data View in full screen
+  if (showDataView) {
+    return (
+      <div className="h-screen w-screen bg-background">
+        <SPSSDataView
+          file={showDataView}
+          onClose={() => setShowDataView(null)}
+          onSave={handleDataViewSave}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="h-screen flex bg-background">
@@ -30,6 +56,7 @@ export default function Home() {
           setSelectedFile={setSelectedFile}
           isCollapsed={isPanelCollapsed}
           onToggleCollapse={() => setIsPanelCollapsed(!isPanelCollapsed)}
+          onShowDataView={setShowDataView}
         />
       </div>
       

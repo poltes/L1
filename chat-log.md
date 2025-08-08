@@ -1,3 +1,13 @@
+## [usr-1754678994939]
+**User Request:** when i click the data view it does not open full view instead it shows only in the left side i want on click it shows full page ,attached the screenshot
+
+Attachments: @.ideavo-attachments/image.png
+
+**Response Summary:** Successfully converted the SPSS data view from a left-panel overlay to a true full-page view. Modified the data panel component to pass the show data view function to the parent component instead of handling it internally. Updated the main page layout to conditionally render the SPSS data view as a full-screen component that completely replaces the two-panel layout when activated. The SPSS data view now takes over the entire screen (100vh x 100vw) providing complete access to all scrollbars and functionality without being constrained to the left panel. When the data view is closed, the user returns to the normal two-panel interface seamlessly.
+**Files Modified:**
+- components/data-panel.tsx (updated: removed internal SPSS overlay, added onShowDataView prop, cleaned up state management)
+- app/page.tsx (updated: added full-screen SPSS data view state management, conditional rendering for full-page mode)
+
 ## [usr-1754678624046]
 **User Request:** on click it opens floating data view so i dont see any scroll bar can you make it as full width page not a floating page ,and rename the software as "Nemo" not data analysis hub
 **Response Summary:** Successfully converted the SPSS data view from a floating modal to a full-width page layout and renamed the software from "Data Analysis Hub" to "Nemo" throughout the application. Modified the SPSS data view component to remove the fixed positioning and backdrop blur, converting it to a full-width layout. Updated the data panel to show the SPSS view as an absolute positioned overlay that takes over the entire panel instead of a modal. Changed all references in the application title, layout metadata, and README documentation from "Data Analysis Hub" to "Nemo". Added full-width layout documentation to README explaining the complete page takeover for distraction-free data editing. The SPSS data view now provides a seamless full-page experience without any floating behavior or scroll bar issues.
