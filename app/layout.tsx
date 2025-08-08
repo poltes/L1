@@ -6,7 +6,7 @@ import { Toaster } from 'sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'AI Data Analysis Hub',
+  title: 'Nemo',
   description: 'Natural language data analysis powered by AI',
 };
 

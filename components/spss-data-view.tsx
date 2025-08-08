@@ -322,8 +322,8 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-7xl h-[90vh] bg-background border rounded-lg shadow-lg flex flex-col">
+    <div className="w-full h-full flex flex-col bg-background">
+      <div className="w-full h-full bg-background flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5" />

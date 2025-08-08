@@ -1,4 +1,4 @@
-# AI Data Analysis Hub
+# Nemo
 
 A modern, AI-powered data analysis platform that allows users to upload datasets and interact with them using natural language queries. Built with Next.js 14, TypeScript, and Google Gemini AI.
 
@@ -65,7 +65,7 @@ A modern, AI-powered data analysis platform that allows users to upload datasets
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd ai-data-analysis-hub
+   cd nemo
    ```
 
 2. **Install dependencies**
@@ -107,11 +107,12 @@ npm start
 
 ### 2. Explore Your Data
 - **Files Tab**: View all uploaded files with metadata (rows, size, upload time)
-- **SPSS Data View**: Click the table icon on any file to open professional data editor with:
+- **SPSS Data View**: Click the table icon on any file to open full-page professional data editor with:
   - **Data View**: Edit cells directly, add/delete rows and variables with full horizontal and vertical scrolling
-  - **Variable View**: Configure data types, labels, missing values, and measurement scales with scrollable interface
+  - **Variable View**: Configure data types, labels, missing values, and measurement scales with scrollable interface  
   - **Find & Replace**: Ctrl+F to search data, Ctrl+H for find and replace with case sensitivity options
   - **Keyboard Shortcuts**: Navigate between search matches and perform bulk replacements
+  - **Full-Width Layout**: Complete page takeover for distraction-free data editing and viewing
   - **Export**: Save edited data as CSV files
 - **Charts Tab**: Automatic visualizations including:
   - Statistical summaries

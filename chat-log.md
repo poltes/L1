@@ -1,3 +1,12 @@
+## [usr-1754678624046]
+**User Request:** on click it opens floating data view so i dont see any scroll bar can you make it as full width page not a floating page ,and rename the software as "Nemo" not data analysis hub
+**Response Summary:** Successfully converted the SPSS data view from a floating modal to a full-width page layout and renamed the software from "Data Analysis Hub" to "Nemo" throughout the application. Modified the SPSS data view component to remove the fixed positioning and backdrop blur, converting it to a full-width layout. Updated the data panel to show the SPSS view as an absolute positioned overlay that takes over the entire panel instead of a modal. Changed all references in the application title, layout metadata, and README documentation from "Data Analysis Hub" to "Nemo". Added full-width layout documentation to README explaining the complete page takeover for distraction-free data editing. The SPSS data view now provides a seamless full-page experience without any floating behavior or scroll bar issues.
+**Files Modified:**
+- components/spss-data-view.tsx (updated: converted from floating modal to full-width layout)
+- components/data-panel.tsx (updated: modified to show SPSS view as full-panel overlay, updated title to "Nemo")
+- app/layout.tsx (updated: changed title from "AI Data Analysis Hub" to "Nemo")
+- README.md (updated: renamed software to "Nemo", documented full-width SPSS data view layout)
+
 ## [usr-1754677238365]
 **User Request:** 1) the spss data view does not have scrollable horizontal and vertical scroll button ,add functions like ctrl+f ,find and replace the values 
 **Response Summary:** Enhanced the SPSS data view with comprehensive scrolling and search capabilities. Added full horizontal and vertical scrollbars to both Data View and Variable View tabs by replacing ScrollArea components with native scrollable divs and proper table layouts. Implemented Ctrl+F find functionality with search highlighting (yellow background for matches, blue ring for current match). Added Ctrl+H find and replace functionality with options for case-sensitive searching, single replacements, and replace-all operations. Added navigation between matches with Previous/Next buttons. All search matches are visually highlighted in the data grid, and keyboard shortcuts work globally within the component. The interface now provides SPSS-like data manipulation capabilities with modern web UI patterns.

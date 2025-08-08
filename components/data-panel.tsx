@@ -231,10 +231,10 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col relative">
       <div className="p-6 border-b">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Data Analysis Hub</h2>
+          <h2 className="text-xl font-semibold">Nemo</h2>
           <div className="flex items-center space-x-2">
             <Button
               variant="ghost"
@@ -425,13 +425,15 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
         </Tabs>
       </div>
 
-      {/* SPSS Data View Modal */}
+      {/* SPSS Data View - Full Panel */}
       {showDataView && (
-        <SPSSDataView
-          file={showDataView}
-          onClose={() => setShowDataView(null)}
-          onSave={handleDataViewSave}
-        />
+        <div className="absolute inset-0 bg-background z-10">
+          <SPSSDataView
+            file={showDataView}
+            onClose={() => setShowDataView(null)}
+            onSave={handleDataViewSave}
+          />
+        </div>
       )}
     </div>
   )
