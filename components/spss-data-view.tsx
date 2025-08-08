@@ -96,6 +96,16 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     return editedData.length > 0 ? Object.keys(editedData[0]) : []
   }, [editedData])
 
+  // Generate Excel-style column names (A, B, C, ..., AA, AB, etc.)
+  const getExcelColumnName = (index: number): string => {
+    let result = ''
+    while (index >= 0) {
+      result = String.fromCharCode(65 + (index % 26)) + result
+      index = Math.floor(index / 26) - 1
+    }
+    return result
+  }
+
   const handleCellEdit = (rowIndex: number, column: string, value: string) => {
     const newData = [...editedData]
     
@@ -479,7 +489,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
             </TabsList>
           </div>
 
-          <TabsContent value="data" className="flex-1 overflow-hidden">
+          <TabsContent value="data" className="flex-1 flex flex-col overflow-hidden">
             <div className="p-4 border-b flex gap-2">
               <Button onClick={addNewRow} size="sm" variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
@@ -491,19 +501,20 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
               </Button>
             </div>
             
-            <div className="flex-1 overflow-auto" style={{ overflowX: 'auto', overflowY: 'auto' }}>
-              <div style={{ minWidth: 'max-content' }}>
-                <table className="border-collapse" style={{ minWidth: '100%' }}>
+            <div className="flex-1" style={{ overflow: 'auto', height: 'calc(100vh - 200px)' }}>
+              <div style={{ minWidth: 'max-content', overflowX: 'auto' }}>
+                <table className="border-collapse" style={{ minWidth: '100%', tableLayout: 'auto' }}>
                   <thead className="sticky top-0 bg-background z-10 border-b">
                     <tr>
-                      <th className="w-16 p-2 text-left text-xs font-medium text-muted-foreground border-r">
+                      <th className="w-16 p-2 text-left text-xs font-medium text-muted-foreground border-r sticky left-0 bg-background">
                         #
                       </th>
-                      {columns.map(column => (
-                        <th key={column} className="p-2 text-left font-mono text-xs border-r" style={{ minWidth: '150px', width: `${variables[column]?.width * 8 || 120}px` }}>
+                      {columns.map((column, index) => (
+                        <th key={column} className="p-2 text-left font-mono text-xs border-r" style={{ minWidth: '150px', width: `${variables[column]?.width * 8 || 150}px` }}>
                           <div className="flex flex-col">
-                            <span className="font-semibold">{variables[column]?.label || column}</span>
-                            <span className="text-muted-foreground">({variables[column]?.type})</span>
+                            <span className="font-semibold text-blue-600 dark:text-blue-400">{getExcelColumnName(index)}</span>
+                            <span className="font-medium">{variables[column]?.label || column}</span>
+                            <span className="text-muted-foreground text-[10px]">({variables[column]?.type})</span>
                           </div>
                         </th>
                       ))}
@@ -515,7 +526,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                   <tbody>
                     {editedData.map((row, rowIndex) => (
                       <tr key={rowIndex} className="hover:bg-muted/50 border-b">
-                        <td className="p-1 text-xs text-muted-foreground font-mono border-r">
+                        <td className="p-1 text-xs text-muted-foreground font-mono border-r sticky left-0 bg-background">
                           {rowIndex + 1}
                         </td>
                         {columns.map(column => {
@@ -529,6 +540,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               } ${
                                 isCurrent ? 'ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/50' : ''
                               }`}
+                              style={{ minWidth: '150px', width: `${variables[column]?.width * 8 || 150}px` }}
                               onClick={() => {
                                 setEditingCell({ row: rowIndex, col: column })
                                 setCellValue(String(row[column] || ''))
@@ -576,33 +588,37 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="variable" className="flex-1 overflow-hidden">
+          <TabsContent value="variable" className="flex-1 flex flex-col overflow-hidden">
             <div className="p-4 border-b">
               <p className="text-sm text-muted-foreground">
                 Configure variable properties, labels, and data types
               </p>
             </div>
             
-            <div className="flex-1 overflow-auto" style={{ overflowX: 'auto', overflowY: 'auto' }}>
-              <div className="p-4" style={{ minWidth: 'max-content' }}>
-                <table className="border-collapse" style={{ minWidth: '100%' }}>
+            <div className="flex-1 p-4" style={{ overflow: 'auto', height: 'calc(100vh - 200px)' }}>
+              <div style={{ minWidth: 'max-content', overflowX: 'auto' }}>
+                <table className="border-collapse" style={{ minWidth: '100%', tableLayout: 'auto' }}>
                   <thead className="sticky top-0 bg-background z-10">
                     <tr className="border-b">
-                      <th className="text-left p-2 font-medium">Name</th>
-                      <th className="text-left p-2 font-medium">Type</th>
-                      <th className="text-left p-2 font-medium">Width</th>
-                      <th className="text-left p-2 font-medium">Decimals</th>
-                      <th className="text-left p-2 font-medium">Label</th>
-                      <th className="text-left p-2 font-medium">Measure</th>
-                      <th className="text-left p-2 font-medium">Missing Values</th>
-                      <th className="text-left p-2 font-medium">Actions</th>
+                      <th className="text-left p-2 font-medium min-w-[100px]">Column</th>
+                      <th className="text-left p-2 font-medium min-w-[120px]">Name</th>
+                      <th className="text-left p-2 font-medium min-w-[100px]">Type</th>
+                      <th className="text-left p-2 font-medium min-w-[80px]">Width</th>
+                      <th className="text-left p-2 font-medium min-w-[80px]">Decimals</th>
+                      <th className="text-left p-2 font-medium min-w-[150px]">Label</th>
+                      <th className="text-left p-2 font-medium min-w-[100px]">Measure</th>
+                      <th className="text-left p-2 font-medium min-w-[150px]">Missing Values</th>
+                      <th className="text-left p-2 font-medium min-w-[80px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {columns.map(column => {
+                    {columns.map((column, index) => {
                       const variable = variables[column]
                       return (
                         <tr key={column} className="border-b hover:bg-muted/50">
+                          <td className="p-2 font-mono font-semibold text-blue-600 dark:text-blue-400">
+                            {getExcelColumnName(index)}
+                          </td>
                           <td className="p-2 font-mono font-semibold">
                             {column}
                           </td>
