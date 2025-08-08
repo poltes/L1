@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,8 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
-import { Database, Variable, Download, Save, Plus, Trash2, Edit3 } from 'lucide-react'
+import { Database, Variable, Download, Save, Plus, Trash2, Edit3, Search, Replace } from 'lucide-react'
 
 interface UploadedFile {
   id: string
@@ -44,6 +47,13 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
   const [variables, setVariables] = useState<{ [key: string]: VariableInfo }>({})
   const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null)
   const [cellValue, setCellValue] = useState('')
+  const [findText, setFindText] = useState('')
+  const [replaceText, setReplaceText] = useState('')
+  const [findDialogOpen, setFindDialogOpen] = useState(false)
+  const [replaceDialogOpen, setReplaceDialogOpen] = useState(false)
+  const [caseSensitive, setCaseSensitive] = useState(false)
+  const [foundMatches, setFoundMatches] = useState<{ row: number; col: string }[]>([])
+  const [currentMatch, setCurrentMatch] = useState(0)
 
   // Initialize data and variables
   useEffect(() => {
@@ -192,6 +202,125 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     toast.success('Changes saved successfully')
   }
 
+  // Find functionality
+  const handleFind = useCallback(() => {
+    if (!findText.trim()) {
+      setFoundMatches([])
+      return
+    }
+
+    const matches: { row: number; col: string }[] = []
+    const searchValue = caseSensitive ? findText : findText.toLowerCase()
+
+    editedData.forEach((row, rowIndex) => {
+      columns.forEach(column => {
+        const cellValue = String(row[column] || '')
+        const searchIn = caseSensitive ? cellValue : cellValue.toLowerCase()
+        if (searchIn.includes(searchValue)) {
+          matches.push({ row: rowIndex, col: column })
+        }
+      })
+    })
+
+    setFoundMatches(matches)
+    setCurrentMatch(0)
+    
+    if (matches.length === 0) {
+      toast.info('No matches found')
+    } else {
+      toast.success(`Found ${matches.length} matches`)
+    }
+  }, [findText, editedData, columns, caseSensitive])
+
+  // Replace functionality
+  const handleReplace = useCallback((replaceAll: boolean = false) => {
+    if (!findText.trim()) {
+      toast.error('Please enter text to find')
+      return
+    }
+
+    let replacements = 0
+    const newData = [...editedData]
+    const searchValue = caseSensitive ? findText : findText.toLowerCase()
+
+    newData.forEach((row, rowIndex) => {
+      columns.forEach(column => {
+        const cellValue = String(row[column] || '')
+        const searchIn = caseSensitive ? cellValue : cellValue.toLowerCase()
+        
+        if (replaceAll) {
+          if (searchIn.includes(searchValue)) {
+            const regex = new RegExp(
+              findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+              caseSensitive ? 'g' : 'gi'
+            )
+            row[column] = cellValue.replace(regex, replaceText)
+            replacements++
+          }
+        } else {
+          // Replace only current match
+          if (currentMatch < foundMatches.length) {
+            const match = foundMatches[currentMatch]
+            if (match.row === rowIndex && match.col === column) {
+              const regex = new RegExp(
+                findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                caseSensitive ? '' : 'i'
+              )
+              row[column] = cellValue.replace(regex, replaceText)
+              replacements++
+            }
+          }
+        }
+      })
+    })
+
+    if (replacements > 0) {
+      setEditedData(newData)
+      toast.success(`Replaced ${replacements} occurrence${replacements > 1 ? 's' : ''}`)
+      // Refresh matches after replacement
+      setTimeout(() => handleFind(), 100)
+    } else {
+      toast.info('No replacements made')
+    }
+  }, [findText, replaceText, editedData, columns, caseSensitive, currentMatch, foundMatches, handleFind])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault()
+        setFindDialogOpen(true)
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+        e.preventDefault()
+        setReplaceDialogOpen(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const navigateToMatch = (direction: 'next' | 'prev') => {
+    if (foundMatches.length === 0) return
+    
+    if (direction === 'next') {
+      setCurrentMatch((prev) => (prev + 1) % foundMatches.length)
+    } else {
+      setCurrentMatch((prev) => (prev - 1 + foundMatches.length) % foundMatches.length)
+    }
+  }
+
+  const isMatchHighlighted = (rowIndex: number, column: string) => {
+    return foundMatches.some(match => match.row === rowIndex && match.col === column)
+  }
+
+  const isCurrentMatch = (rowIndex: number, column: string) => {
+    if (foundMatches.length === 0) return false
+    const currentMatchData = foundMatches[currentMatch]
+    return currentMatchData && currentMatchData.row === rowIndex && currentMatchData.col === column
+  }
+
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="w-full max-w-7xl h-[90vh] bg-background border rounded-lg shadow-lg flex flex-col">
@@ -210,6 +339,126 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
               <Save className="h-4 w-4 mr-2" />
               Save
             </Button>
+            <Dialog open={findDialogOpen} onOpenChange={setFindDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Search className="h-4 w-4 mr-2" />
+                  Find (Ctrl+F)
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Find in Data</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="find-input">Find what:</Label>
+                    <Input
+                      id="find-input"
+                      value={findText}
+                      onChange={(e) => setFindText(e.target.value)}
+                      placeholder="Enter text to find"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleFind()
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="case-sensitive"
+                      checked={caseSensitive}
+                      onCheckedChange={(checked) => setCaseSensitive(checked as boolean)}
+                    />
+                    <Label htmlFor="case-sensitive">Case sensitive</Label>
+                  </div>
+                  {foundMatches.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        {currentMatch + 1} of {foundMatches.length} matches
+                      </span>
+                      <Button size="sm" onClick={() => navigateToMatch('prev')}>
+                        Previous
+                      </Button>
+                      <Button size="sm" onClick={() => navigateToMatch('next')}>
+                        Next
+                      </Button>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <Button onClick={handleFind}>Find All</Button>
+                    <Button variant="outline" onClick={() => setFindDialogOpen(false)}>
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={replaceDialogOpen} onOpenChange={setReplaceDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Replace className="h-4 w-4 mr-2" />
+                  Replace (Ctrl+H)
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Find and Replace</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="find-replace-input">Find what:</Label>
+                    <Input
+                      id="find-replace-input"
+                      value={findText}
+                      onChange={(e) => setFindText(e.target.value)}
+                      placeholder="Enter text to find"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="replace-input">Replace with:</Label>
+                    <Input
+                      id="replace-input"
+                      value={replaceText}
+                      onChange={(e) => setReplaceText(e.target.value)}
+                      placeholder="Enter replacement text"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="case-sensitive-replace"
+                      checked={caseSensitive}
+                      onCheckedChange={(checked) => setCaseSensitive(checked as boolean)}
+                    />
+                    <Label htmlFor="case-sensitive-replace">Case sensitive</Label>
+                  </div>
+                  {foundMatches.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        {currentMatch + 1} of {foundMatches.length} matches
+                      </span>
+                      <Button size="sm" onClick={() => navigateToMatch('prev')}>
+                        Previous
+                      </Button>
+                      <Button size="sm" onClick={() => navigateToMatch('next')}>
+                        Next
+                      </Button>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <Button onClick={handleFind}>Find All</Button>
+                    <Button onClick={() => handleReplace(false)}>Replace</Button>
+                    <Button onClick={() => handleReplace(true)} variant="destructive">
+                      Replace All
+                    </Button>
+                    <Button variant="outline" onClick={() => setReplaceDialogOpen(false)}>
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button onClick={onClose} variant="ghost" size="sm">
               Close
             </Button>
@@ -242,62 +491,74 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
               </Button>
             </div>
             
-            <ScrollArea className="flex-1">
-              <div className="p-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-16">#</TableHead>
+            <div className="flex-1 overflow-auto">
+              <div className="min-w-max">
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 bg-background z-10 border-b">
+                    <tr>
+                      <th className="w-16 p-2 text-left text-xs font-medium text-muted-foreground border-r">
+                        #
+                      </th>
                       {columns.map(column => (
-                        <TableHead key={column} className="min-w-[120px] font-mono text-xs">
+                        <th key={column} className="min-w-[120px] p-2 text-left font-mono text-xs border-r">
                           <div className="flex flex-col">
                             <span className="font-semibold">{variables[column]?.label || column}</span>
                             <span className="text-muted-foreground">({variables[column]?.type})</span>
                           </div>
-                        </TableHead>
+                        </th>
                       ))}
-                      <TableHead className="w-16">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                      <th className="w-16 p-2 text-left text-xs font-medium text-muted-foreground">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {editedData.map((row, rowIndex) => (
-                      <TableRow key={rowIndex} className="hover:bg-muted/50">
-                        <TableCell className="text-xs text-muted-foreground font-mono">
+                      <tr key={rowIndex} className="hover:bg-muted/50 border-b">
+                        <td className="p-1 text-xs text-muted-foreground font-mono border-r">
                           {rowIndex + 1}
-                        </TableCell>
-                        {columns.map(column => (
-                          <TableCell 
-                            key={column} 
-                            className="p-1 font-mono text-xs cursor-pointer border-r hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                            onClick={() => {
-                              setEditingCell({ row: rowIndex, col: column })
-                              setCellValue(String(row[column] || ''))
-                            }}
-                          >
-                            {editingCell?.row === rowIndex && editingCell?.col === column ? (
-                              <Input
-                                value={cellValue}
-                                onChange={(e) => setCellValue(e.target.value)}
-                                onBlur={() => handleCellEdit(rowIndex, column, cellValue)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    handleCellEdit(rowIndex, column, cellValue)
-                                  } else if (e.key === 'Escape') {
-                                    setEditingCell(null)
-                                    setCellValue('')
-                                  }
-                                }}
-                                className="h-6 text-xs font-mono border-0 p-1 focus:ring-1"
-                                autoFocus
-                              />
-                            ) : (
-                              <div className="min-h-[24px] flex items-center p-1">
-                                {String(row[column] || '')}
-                              </div>
-                            )}
-                          </TableCell>
-                        ))}
-                        <TableCell className="p-1">
+                        </td>
+                        {columns.map(column => {
+                          const isHighlighted = isMatchHighlighted(rowIndex, column)
+                          const isCurrent = isCurrentMatch(rowIndex, column)
+                          return (
+                            <td 
+                              key={column} 
+                              className={`p-1 font-mono text-xs cursor-pointer border-r hover:bg-blue-50 dark:hover:bg-blue-900/20 ${
+                                isHighlighted ? 'bg-yellow-200 dark:bg-yellow-900/30' : ''
+                              } ${
+                                isCurrent ? 'ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/50' : ''
+                              }`}
+                              onClick={() => {
+                                setEditingCell({ row: rowIndex, col: column })
+                                setCellValue(String(row[column] || ''))
+                              }}
+                            >
+                              {editingCell?.row === rowIndex && editingCell?.col === column ? (
+                                <Input
+                                  value={cellValue}
+                                  onChange={(e) => setCellValue(e.target.value)}
+                                  onBlur={() => handleCellEdit(rowIndex, column, cellValue)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleCellEdit(rowIndex, column, cellValue)
+                                    } else if (e.key === 'Escape') {
+                                      setEditingCell(null)
+                                      setCellValue('')
+                                    }
+                                  }}
+                                  className="h-6 text-xs font-mono border-0 p-1 focus:ring-1"
+                                  autoFocus
+                                />
+                              ) : (
+                                <div className="min-h-[24px] flex items-center p-1">
+                                  {String(row[column] || '')}
+                                </div>
+                              )}
+                            </td>
+                          )
+                        })}
+                        <td className="p-1">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -306,13 +567,13 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
+                  </tbody>
+                </table>
               </div>
-            </ScrollArea>
+            </div>
           </TabsContent>
 
           <TabsContent value="variable" className="flex-1 overflow-hidden">
@@ -322,30 +583,30 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
               </p>
             </div>
             
-            <ScrollArea className="flex-1">
-              <div className="p-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Width</TableHead>
-                      <TableHead>Decimals</TableHead>
-                      <TableHead>Label</TableHead>
-                      <TableHead>Measure</TableHead>
-                      <TableHead>Missing Values</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+            <div className="flex-1 overflow-auto">
+              <div className="min-w-max p-4">
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 bg-background z-10">
+                    <tr className="border-b">
+                      <th className="text-left p-2 font-medium">Name</th>
+                      <th className="text-left p-2 font-medium">Type</th>
+                      <th className="text-left p-2 font-medium">Width</th>
+                      <th className="text-left p-2 font-medium">Decimals</th>
+                      <th className="text-left p-2 font-medium">Label</th>
+                      <th className="text-left p-2 font-medium">Measure</th>
+                      <th className="text-left p-2 font-medium">Missing Values</th>
+                      <th className="text-left p-2 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {columns.map(column => {
                       const variable = variables[column]
                       return (
-                        <TableRow key={column}>
-                          <TableCell className="font-mono font-semibold">
+                        <tr key={column} className="border-b hover:bg-muted/50">
+                          <td className="p-2 font-mono font-semibold">
                             {column}
-                          </TableCell>
-                          <TableCell>
+                          </td>
+                          <td className="p-2">
                             <Select
                               value={variable?.type || 'string'}
                               onValueChange={(value: 'numeric' | 'string' | 'date') =>
@@ -361,8 +622,8 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                                 <SelectItem value="date">Date</SelectItem>
                               </SelectContent>
                             </Select>
-                          </TableCell>
-                          <TableCell>
+                          </td>
+                          <td className="p-2">
                             <Input
                               type="number"
                               value={variable?.width || 8}
@@ -373,8 +634,8 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               min="1"
                               max="50"
                             />
-                          </TableCell>
-                          <TableCell>
+                          </td>
+                          <td className="p-2">
                             <Input
                               type="number"
                               value={variable?.decimals || 2}
@@ -386,18 +647,18 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               max="10"
                               disabled={variable?.type !== 'numeric'}
                             />
-                          </TableCell>
-                          <TableCell>
+                          </td>
+                          <td className="p-2">
                             <Input
                               value={variable?.label || column}
                               onChange={(e) =>
                                 handleVariableUpdate(column, { label: e.target.value })
                               }
-                              className="text-xs"
+                              className="text-xs min-w-[120px]"
                               placeholder="Variable label"
                             />
-                          </TableCell>
-                          <TableCell>
+                          </td>
+                          <td className="p-2">
                             <Select
                               value={variable?.measure || 'nominal'}
                               onValueChange={(value: 'scale' | 'ordinal' | 'nominal') =>
@@ -413,8 +674,8 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                                 <SelectItem value="nominal">Nominal</SelectItem>
                               </SelectContent>
                             </Select>
-                          </TableCell>
-                          <TableCell>
+                          </td>
+                          <td className="p-2">
                             <Input
                               value={variable?.missing.join(', ') || ''}
                               onChange={(e) =>
@@ -422,11 +683,11 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                                   missing: e.target.value.split(',').map(s => s.trim()) 
                                 })
                               }
-                              className="text-xs"
+                              className="text-xs min-w-[120px]"
                               placeholder="e.g., , NULL, N/A"
                             />
-                          </TableCell>
-                          <TableCell>
+                          </td>
+                          <td className="p-2">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -435,14 +696,14 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
-                          </TableCell>
-                        </TableRow>
+                          </td>
+                        </tr>
                       )
                     })}
-                  </TableBody>
-                </Table>
+                  </tbody>
+                </table>
               </div>
-            </ScrollArea>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
