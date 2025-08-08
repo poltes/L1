@@ -491,16 +491,16 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
               </Button>
             </div>
             
-            <div className="flex-1 overflow-auto">
-              <div className="min-w-max">
-                <table className="w-full border-collapse">
+            <div className="flex-1 overflow-auto" style={{ overflowX: 'auto', overflowY: 'auto' }}>
+              <div style={{ minWidth: 'max-content' }}>
+                <table className="border-collapse" style={{ minWidth: '100%' }}>
                   <thead className="sticky top-0 bg-background z-10 border-b">
                     <tr>
                       <th className="w-16 p-2 text-left text-xs font-medium text-muted-foreground border-r">
                         #
                       </th>
                       {columns.map(column => (
-                        <th key={column} className="min-w-[120px] p-2 text-left font-mono text-xs border-r">
+                        <th key={column} className="p-2 text-left font-mono text-xs border-r" style={{ minWidth: '150px', width: `${variables[column]?.width * 8 || 120}px` }}>
                           <div className="flex flex-col">
                             <span className="font-semibold">{variables[column]?.label || column}</span>
                             <span className="text-muted-foreground">({variables[column]?.type})</span>
@@ -583,9 +583,9 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
               </p>
             </div>
             
-            <div className="flex-1 overflow-auto">
-              <div className="min-w-max p-4">
-                <table className="w-full border-collapse">
+            <div className="flex-1 overflow-auto" style={{ overflowX: 'auto', overflowY: 'auto' }}>
+              <div className="p-4" style={{ minWidth: 'max-content' }}>
+                <table className="border-collapse" style={{ minWidth: '100%' }}>
                   <thead className="sticky top-0 bg-background z-10">
                     <tr className="border-b">
                       <th className="text-left p-2 font-medium">Name</th>

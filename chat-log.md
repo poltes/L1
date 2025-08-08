@@ -1,3 +1,9 @@
+## [usr-1754679633889]
+**User Request:** horizontal scroll button is there but its not letting me scroll to other columns 
+**Response Summary:** Fixed horizontal scroll functionality in SPSS data view by updating the CSS implementation. Replaced Tailwind classes with explicit inline styles for better scroll control, setting overflowX and overflowY to 'auto' on both data and variable views. Updated table structure to use minWidth: 'max-content' on wrapper divs and enhanced column width calculation based on variable width settings. Added proper minimum widths (150px) to table headers and implemented dynamic width calculation using variable width settings. The horizontal scroll now works properly allowing users to scroll through all columns in both Data View and Variable View tabs.
+**Files Modified:** 
+- components/spss-data-view.tsx (updated: fixed horizontal scroll implementation with proper CSS overflow handling and column width management)
+
 ## [usr-1754678994939]
 **User Request:** when i click the data view it does not open full view instead it shows only in the left side i want on click it shows full page ,attached the screenshot
 
