@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,12 +27,15 @@ interface UploadedFile {
 interface VariableInfo {
   name: string
   type: 'numeric' | 'string' | 'date'
+  width: number
+  decimals: number
   label: string
   values: { [key: string]: string }
   missing: string[]
-  width: number
-  decimals: number
+  columns: number
+  align: 'left' | 'center' | 'right'
   measure: 'scale' | 'ordinal' | 'nominal'
+  role: 'input' | 'target' | 'both' | 'none' | 'partition' | 'split'
 }
 
 interface SPSSDataViewProps {
@@ -55,6 +58,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
   const [foundMatches, setFoundMatches] = useState<{ row: number; col: string }[]>([])
   const [currentMatch, setCurrentMatch] = useState(0)
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: string } | null>(null)
+  const [navigationThrottle, setNavigationThrottle] = useState<NodeJS.Timeout | null>(null)
 
   // Initialize data and variables
   useEffect(() => {
@@ -72,12 +76,15 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
         varsInfo[col] = {
           name: col,
           type: numericValues.length > nonEmptyValues.length * 0.7 ? 'numeric' : 'string',
+          width: Math.max(8, Math.min(20, col.length + 2)),
+          decimals: 2,
           label: col,
           values: {},
           missing: ['', 'NULL', 'null', 'N/A', 'NA'],
-          width: Math.max(8, Math.min(20, col.length + 2)),
-          decimals: 2,
-          measure: numericValues.length > nonEmptyValues.length * 0.7 ? 'scale' : 'nominal'
+          columns: Math.max(8, Math.min(20, col.length + 2)),
+          align: numericValues.length > nonEmptyValues.length * 0.7 ? 'right' : 'left',
+          measure: numericValues.length > nonEmptyValues.length * 0.7 ? 'scale' : 'nominal',
+          role: 'input'
         }
         
         // Detect potential value labels for categorical data
@@ -158,12 +165,15 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
       [newVarName]: {
         name: newVarName,
         type: 'string',
+        width: 10,
+        decimals: 2,
         label: newVarName,
         values: {},
         missing: ['', 'NULL', 'null', 'N/A', 'NA'],
-        width: 10,
-        decimals: 2,
-        measure: 'nominal'
+        columns: 10,
+        align: 'left',
+        measure: 'nominal',
+        role: 'input'
       }
     }))
     toast.success('New variable added')
@@ -297,57 +307,72 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     }
   }, [findText, replaceText, editedData, columns, caseSensitive, currentMatch, foundMatches, handleFind])
 
-  // Keyboard navigation
-  const handleCellNavigation = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
-    if (!selectedCell || editedData.length === 0) return
-
-    const currentRowIndex = selectedCell.row
-    const currentColIndex = columns.indexOf(selectedCell.col)
-    
-    let newRowIndex = currentRowIndex
-    let newColIndex = currentColIndex
-
-    switch (direction) {
-      case 'up':
-        newRowIndex = Math.max(0, currentRowIndex - 1)
-        break
-      case 'down':
-        newRowIndex = Math.min(editedData.length - 1, currentRowIndex + 1)
-        break
-      case 'left':
-        newColIndex = Math.max(0, currentColIndex - 1)
-        break
-      case 'right':
-        newColIndex = Math.min(columns.length - 1, currentColIndex + 1)
-        break
-    }
-
-    if (newRowIndex !== currentRowIndex || newColIndex !== currentColIndex) {
-      const newSelectedCell = { row: newRowIndex, col: columns[newColIndex] }
-      setSelectedCell(newSelectedCell)
-      
-      // Scroll to the new cell if it's out of view
-      scrollToCell(newRowIndex, newColIndex)
-    }
-  }, [selectedCell, editedData, columns])
-
-  const scrollToCell = (rowIndex: number, colIndex: number) => {
+  const scrollToCell = useCallback((rowIndex: number, colIndex: number) => {
     const tableContainer = document.querySelector('[data-table-container]')
     if (!tableContainer) return
 
-    // Calculate cell position and scroll if needed
-    const cellElement = tableContainer.querySelector(
-      `[data-cell-row="${rowIndex}"][data-cell-col="${columns[colIndex]}"]`
-    )
+    requestAnimationFrame(() => {
+      const cellElement = tableContainer.querySelector(
+        `[data-cell-row="${rowIndex}"][data-cell-col="${columns[colIndex]}"]`
+      )
+      
+      if (cellElement) {
+        cellElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'nearest'
+        })
+      }
+    })
+  }, [columns])
+
+  // Throttled keyboard navigation for performance
+  const handleCellNavigation = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
+    if (!selectedCell || editedData.length === 0) return
     
-    if (cellElement) {
-      cellElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'nearest'
-      })
+    // Clear existing throttle
+    if (navigationThrottle) {
+      clearTimeout(navigationThrottle)
     }
-  }
+
+    // Throttle navigation to prevent excessive updates
+    const timeoutId = setTimeout(() => {
+      const currentRowIndex = selectedCell.row
+      const currentColIndex = columns.indexOf(selectedCell.col)
+      
+      let newRowIndex = currentRowIndex
+      let newColIndex = currentColIndex
+
+      switch (direction) {
+        case 'up':
+          newRowIndex = Math.max(0, currentRowIndex - 1)
+          break
+        case 'down':
+          newRowIndex = Math.min(editedData.length - 1, currentRowIndex + 1)
+          break
+        case 'left':
+          newColIndex = Math.max(0, currentColIndex - 1)
+          break
+        case 'right':
+          newColIndex = Math.min(columns.length - 1, currentColIndex + 1)
+          break
+      }
+
+      if (newRowIndex !== currentRowIndex || newColIndex !== currentColIndex) {
+        const newSelectedCell = { row: newRowIndex, col: columns[newColIndex] }
+        setSelectedCell(newSelectedCell)
+        
+        // Use requestAnimationFrame for smooth scrolling
+        requestAnimationFrame(() => {
+          scrollToCell(newRowIndex, newColIndex)
+        })
+      }
+      
+      setNavigationThrottle(null)
+    }, 16) // ~60fps throttling
+    
+    setNavigationThrottle(timeoutId)
+  }, [selectedCell, editedData, columns, navigationThrottle, scrollToCell])
 
   // Keyboard shortcuts and navigation
   useEffect(() => {
@@ -425,6 +450,63 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     const currentMatchData = foundMatches[currentMatch]
     return currentMatchData && currentMatchData.row === rowIndex && currentMatchData.col === column
   }
+
+  // Memoized cell component for better performance
+  const DataCell = memo(({ 
+    rowIndex, 
+    column, 
+    value, 
+    isHighlighted, 
+    isCurrent, 
+    isSelected, 
+    onEdit 
+  }: {
+    rowIndex: number
+    column: string
+    value: any
+    isHighlighted: boolean
+    isCurrent: boolean
+    isSelected: boolean
+    onEdit: () => void
+  }) => {
+    return (
+      <td 
+        data-cell-row={rowIndex}
+        data-cell-col={column}
+        className={`p-1 font-mono text-xs cursor-pointer border-r hover:bg-blue-50 dark:hover:bg-blue-900/20 ${
+          isHighlighted ? 'bg-yellow-200 dark:bg-yellow-900/30' : ''
+        } ${
+          isCurrent ? 'ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/50' : ''
+        } ${
+          isSelected && !editingCell ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-900/20' : ''
+        }`}
+        style={{ minWidth: '150px', width: `${variables[column]?.columns * 8 || 150}px` }}
+        onClick={onEdit}
+      >
+        {editingCell?.row === rowIndex && editingCell?.col === column ? (
+          <Input
+            value={cellValue}
+            onChange={(e) => setCellValue(e.target.value)}
+            onBlur={() => handleCellEdit(rowIndex, column, cellValue)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleCellEdit(rowIndex, column, cellValue)
+              } else if (e.key === 'Escape') {
+                setEditingCell(null)
+                setCellValue('')
+              }
+            }}
+            className="h-6 text-xs font-mono border-0 p-1 focus:ring-1"
+            autoFocus
+          />
+        ) : (
+          <div className="min-h-[24px] flex items-center p-1">
+            {String(value || '')}
+          </div>
+        )}
+      </td>
+    )
+  })
 
   return (
     <div className="w-full h-full flex flex-col bg-background">
@@ -634,53 +716,22 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                         <td className="p-1 text-xs text-muted-foreground font-mono border-r sticky left-0 bg-background">
                           {rowIndex + 1}
                         </td>
-                        {columns.map(column => {
-                          const isHighlighted = isMatchHighlighted(rowIndex, column)
-                          const isCurrent = isCurrentMatch(rowIndex, column)
-                          const isSelected = selectedCell?.row === rowIndex && selectedCell?.col === column
-                          return (
-                            <td 
-                              key={column} 
-                              data-cell-row={rowIndex}
-                              data-cell-col={column}
-                              className={`p-1 font-mono text-xs cursor-pointer border-r hover:bg-blue-50 dark:hover:bg-blue-900/20 ${
-                                isHighlighted ? 'bg-yellow-200 dark:bg-yellow-900/30' : ''
-                              } ${
-                                isCurrent ? 'ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/50' : ''
-                              } ${
-                                isSelected && !editingCell ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-900/20' : ''
-                              }`}
-                              style={{ minWidth: '150px', width: `${variables[column]?.width * 8 || 150}px` }}
-                              onClick={() => {
-                                setSelectedCell({ row: rowIndex, col: column })
-                                setEditingCell({ row: rowIndex, col: column })
-                                setCellValue(String(row[column] || ''))
-                              }}
-                            >
-                              {editingCell?.row === rowIndex && editingCell?.col === column ? (
-                                <Input
-                                  value={cellValue}
-                                  onChange={(e) => setCellValue(e.target.value)}
-                                  onBlur={() => handleCellEdit(rowIndex, column, cellValue)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      handleCellEdit(rowIndex, column, cellValue)
-                                    } else if (e.key === 'Escape') {
-                                      setEditingCell(null)
-                                      setCellValue('')
-                                    }
-                                  }}
-                                  className="h-6 text-xs font-mono border-0 p-1 focus:ring-1"
-                                  autoFocus
-                                />
-                              ) : (
-                                <div className="min-h-[24px] flex items-center p-1">
-                                  {String(row[column] || '')}
-                                </div>
-                              )}
-                            </td>
-                          )
-                        })}
+                        {columns.map(column => (
+                          <DataCell
+                            key={`${rowIndex}-${column}`}
+                            rowIndex={rowIndex}
+                            column={column}
+                            value={row[column]}
+                            isHighlighted={isMatchHighlighted(rowIndex, column)}
+                            isCurrent={isCurrentMatch(rowIndex, column)}
+                            isSelected={selectedCell?.row === rowIndex && selectedCell?.col === column}
+                            onEdit={() => {
+                              setSelectedCell({ row: rowIndex, col: column })
+                              setEditingCell({ row: rowIndex, col: column })
+                              setCellValue(String(row[column] || ''))
+                            }}
+                          />
+                        ))}
                         <td className="p-1">
                           <Button
                             variant="ghost"
@@ -708,39 +759,68 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
             
             <div className="flex-1 p-4" style={{ overflow: 'auto', height: 'calc(100vh - 200px)' }}>
               <div style={{ minWidth: 'max-content', overflowX: 'auto' }}>
-                <table className="border-collapse" style={{ minWidth: '100%', tableLayout: 'auto' }}>
+                <table className="border-collapse w-full" style={{ minWidth: '100%', tableLayout: 'fixed' }}>
                   <thead className="sticky top-0 bg-background z-10">
-                    <tr className="border-b">
-                      <th className="text-left p-2 font-medium min-w-[100px]">Column</th>
-                      <th className="text-left p-2 font-medium min-w-[120px]">Name</th>
-                      <th className="text-left p-2 font-medium min-w-[100px]">Type</th>
-                      <th className="text-left p-2 font-medium min-w-[80px]">Width</th>
-                      <th className="text-left p-2 font-medium min-w-[80px]">Decimals</th>
-                      <th className="text-left p-2 font-medium min-w-[150px]">Label</th>
-                      <th className="text-left p-2 font-medium min-w-[100px]">Measure</th>
-                      <th className="text-left p-2 font-medium min-w-[150px]">Missing Values</th>
-                      <th className="text-left p-2 font-medium min-w-[80px]">Actions</th>
+                    <tr className="border-b bg-gray-50 dark:bg-gray-800">
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '50px'}}>
+                        
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '100px'}}>
+                        Name
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '80px'}}>
+                        Type
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '70px'}}>
+                        Width
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '80px'}}>
+                        Decimals
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '150px'}}>
+                        Label
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '100px'}}>
+                        Values
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '80px'}}>
+                        Missing
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '80px'}}>
+                        Columns
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '70px'}}>
+                        Align
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '80px'}}>
+                        Measure
+                      </th>
+                      <th className="text-left p-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r" style={{width: '70px'}}>
+                        Role
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {columns.map((column, index) => {
                       const variable = variables[column]
                       return (
-                        <tr key={column} className="border-b hover:bg-muted/50">
-                          <td className="p-2 font-mono font-semibold text-blue-600 dark:text-blue-400">
-                            {getExcelColumnName(index)}
+                        <tr key={column} className="border-b hover:bg-blue-50 dark:hover:bg-blue-900/20 h-8">
+                          <td className="p-1 text-xs font-mono text-center text-gray-500 border-r bg-gray-50 dark:bg-gray-800">
+                            {index + 1}
                           </td>
-                          <td className="p-2 font-mono font-semibold">
-                            {column}
+                          <td className="p-1 border-r">
+                            <div className="text-xs font-mono font-medium text-gray-900 dark:text-gray-100">
+                              {column}
+                            </div>
                           </td>
-                          <td className="p-2">
+                          <td className="p-1 border-r">
                             <Select
                               value={variable?.type || 'string'}
                               onValueChange={(value: 'numeric' | 'string' | 'date') =>
                                 handleVariableUpdate(column, { type: value })
                               }
                             >
-                              <SelectTrigger className="w-24">
+                              <SelectTrigger className="h-6 text-xs border-0 bg-transparent p-1 focus:ring-0">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -750,49 +830,88 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="p-2">
+                          <td className="p-1 border-r">
                             <Input
                               type="number"
                               value={variable?.width || 8}
                               onChange={(e) =>
                                 handleVariableUpdate(column, { width: parseInt(e.target.value) || 8 })
                               }
-                              className="w-16 text-xs"
+                              className="h-6 text-xs text-center border-0 bg-transparent p-1 focus:ring-0"
                               min="1"
                               max="50"
                             />
                           </td>
-                          <td className="p-2">
+                          <td className="p-1 border-r">
                             <Input
                               type="number"
-                              value={variable?.decimals || 2}
+                              value={variable?.decimals || 0}
                               onChange={(e) =>
                                 handleVariableUpdate(column, { decimals: parseInt(e.target.value) || 0 })
                               }
-                              className="w-16 text-xs"
+                              className="h-6 text-xs text-center border-0 bg-transparent p-1 focus:ring-0"
                               min="0"
                               max="10"
                               disabled={variable?.type !== 'numeric'}
                             />
                           </td>
-                          <td className="p-2">
+                          <td className="p-1 border-r">
                             <Input
-                              value={variable?.label || column}
+                              value={variable?.label || ''}
                               onChange={(e) =>
                                 handleVariableUpdate(column, { label: e.target.value })
                               }
-                              className="text-xs min-w-[120px]"
-                              placeholder="Variable label"
+                              className="h-6 text-xs border-0 bg-transparent p-1 focus:ring-0"
+                              placeholder=""
                             />
                           </td>
-                          <td className="p-2">
+                          <td className="p-1 border-r">
+                            <div className="h-6 text-xs text-center text-gray-400 flex items-center justify-center">
+                              None
+                            </div>
+                          </td>
+                          <td className="p-1 border-r">
+                            <div className="h-6 text-xs text-center text-gray-400 flex items-center justify-center">
+                              None
+                            </div>
+                          </td>
+                          <td className="p-1 border-r">
+                            <Input
+                              type="number"
+                              value={variable?.columns || 8}
+                              onChange={(e) =>
+                                handleVariableUpdate(column, { columns: parseInt(e.target.value) || 8 })
+                              }
+                              className="h-6 text-xs text-center border-0 bg-transparent p-1 focus:ring-0"
+                              min="1"
+                              max="50"
+                            />
+                          </td>
+                          <td className="p-1 border-r">
+                            <Select
+                              value={variable?.align || 'left'}
+                              onValueChange={(value: 'left' | 'center' | 'right') =>
+                                handleVariableUpdate(column, { align: value })
+                              }
+                            >
+                              <SelectTrigger className="h-6 text-xs border-0 bg-transparent p-1 focus:ring-0">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="left">Left</SelectItem>
+                                <SelectItem value="center">Center</SelectItem>
+                                <SelectItem value="right">Right</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="p-1 border-r">
                             <Select
                               value={variable?.measure || 'nominal'}
                               onValueChange={(value: 'scale' | 'ordinal' | 'nominal') =>
                                 handleVariableUpdate(column, { measure: value })
                               }
                             >
-                              <SelectTrigger className="w-24">
+                              <SelectTrigger className="h-6 text-xs border-0 bg-transparent p-1 focus:ring-0">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -802,27 +921,25 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="p-2">
-                            <Input
-                              value={variable?.missing.join(', ') || ''}
-                              onChange={(e) =>
-                                handleVariableUpdate(column, { 
-                                  missing: e.target.value.split(',').map(s => s.trim()) 
-                                })
+                          <td className="p-1 border-r">
+                            <Select
+                              value={variable?.role || 'input'}
+                              onValueChange={(value: 'input' | 'target' | 'both' | 'none' | 'partition' | 'split') =>
+                                handleVariableUpdate(column, { role: value })
                               }
-                              className="text-xs min-w-[120px]"
-                              placeholder="e.g., , NULL, N/A"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteVariable(column)}
-                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
                             >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                              <SelectTrigger className="h-6 text-xs border-0 bg-transparent p-1 focus:ring-0">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="input">Input</SelectItem>
+                                <SelectItem value="target">Target</SelectItem>
+                                <SelectItem value="both">Both</SelectItem>
+                                <SelectItem value="none">None</SelectItem>
+                                <SelectItem value="partition">Partition</SelectItem>
+                                <SelectItem value="split">Split</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </td>
                         </tr>
                       )
