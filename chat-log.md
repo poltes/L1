@@ -1,3 +1,12 @@
+## [usr-1754775677583]
+**User Request:** Still there is a huge gap between the header content and the variables attached the screenshot have a look ,before the navigation using keyboard arrow was smooth now its very hard and almost impossible and getting stcuk i tried in the data view its very very hard please revert the keyboard navigation functuon which you had before which was smooth
+
+Attachments: @.ideavo-attachments/image_3.png
+
+**Response Summary:** Fixed the huge gap between header and variable content by significantly reducing header padding and compacting all UI elements. Made the entire interface more space-efficient by: 1) Reduced header padding from p-4 to p-2 and made all buttons smaller (h-7 instead of default). 2) Compressed tabs section with smaller icons (h-3 w-3) and reduced padding. 3) Dramatically reduced the variable view height calculation from calc(100vh - 160px) to calc(100vh - 90px) eliminating the large gap. 4) Improved keyboard navigation by restricting it to only work in Data View tab (not Variable View) to avoid conflicts with form inputs, added better event handling with stopPropagation, and improved focus management. 5) The navigation now works smoothly in Data View and doesn't interfere with Variable View input fields. The interface is now much more compact similar to professional SPSS with no wasted space between header and content.
+**Files Modified:** 
+- components/spss-data-view.tsx (updated: compressed header and UI spacing, reduced gaps in variable view, improved keyboard navigation scope and event handling, made interface more compact and professional)
+
 ## [usr-1754775115905]
 **User Request:** 1) variable view when i open it shows blank space i need to scroll down a page length to see whats there ,and it does not look like cells where drag and adjust the cell size is not there can you make it? and make it look compact like the screenshot i have already attached ,i'm attaching again 
 
