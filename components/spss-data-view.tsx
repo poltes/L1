@@ -315,68 +315,50 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     const tableContainer = document.querySelector('[data-table-container]')
     if (!tableContainer) return
 
-    requestAnimationFrame(() => {
-      const cellElement = tableContainer.querySelector(
-        `[data-cell-row="${rowIndex}"][data-cell-col="${columns[colIndex]}"]`
-      )
-      
-      if (cellElement) {
-        cellElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'nearest'
-        })
-      }
-    })
+    const cellElement = tableContainer.querySelector(
+      `[data-cell-row="${rowIndex}"][data-cell-col="${columns[colIndex]}"]`
+    )
+    
+    if (cellElement) {
+      cellElement.scrollIntoView({
+        behavior: 'auto',
+        block: 'nearest',
+        inline: 'nearest'
+      })
+    }
   }, [columns])
 
-  // Throttled keyboard navigation for performance
+  // Instant keyboard navigation - no throttling for smooth performance
   const handleCellNavigation = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     if (!selectedCell || editedData.length === 0) return
     
-    // Clear existing throttle
-    if (navigationThrottle) {
-      clearTimeout(navigationThrottle)
+    const currentRowIndex = selectedCell.row
+    const currentColIndex = columns.indexOf(selectedCell.col)
+    
+    let newRowIndex = currentRowIndex
+    let newColIndex = currentColIndex
+
+    switch (direction) {
+      case 'up':
+        newRowIndex = Math.max(0, currentRowIndex - 1)
+        break
+      case 'down':
+        newRowIndex = Math.min(editedData.length - 1, currentRowIndex + 1)
+        break
+      case 'left':
+        newColIndex = Math.max(0, currentColIndex - 1)
+        break
+      case 'right':
+        newColIndex = Math.min(columns.length - 1, currentColIndex + 1)
+        break
     }
 
-    // Throttle navigation to prevent excessive updates
-    const timeoutId = setTimeout(() => {
-      const currentRowIndex = selectedCell.row
-      const currentColIndex = columns.indexOf(selectedCell.col)
-      
-      let newRowIndex = currentRowIndex
-      let newColIndex = currentColIndex
-
-      switch (direction) {
-        case 'up':
-          newRowIndex = Math.max(0, currentRowIndex - 1)
-          break
-        case 'down':
-          newRowIndex = Math.min(editedData.length - 1, currentRowIndex + 1)
-          break
-        case 'left':
-          newColIndex = Math.max(0, currentColIndex - 1)
-          break
-        case 'right':
-          newColIndex = Math.min(columns.length - 1, currentColIndex + 1)
-          break
-      }
-
-      if (newRowIndex !== currentRowIndex || newColIndex !== currentColIndex) {
-        const newSelectedCell = { row: newRowIndex, col: columns[newColIndex] }
-        setSelectedCell(newSelectedCell)
-        
-        // Use requestAnimationFrame for smooth scrolling
-        requestAnimationFrame(() => {
-          scrollToCell(newRowIndex, newColIndex)
-        })
-      }
-      
-      setNavigationThrottle(null)
-    }, 16) // ~60fps throttling
-    
-    setNavigationThrottle(timeoutId)
-  }, [selectedCell, editedData, columns, navigationThrottle, scrollToCell])
+    if (newRowIndex !== currentRowIndex || newColIndex !== currentColIndex) {
+      const newSelectedCell = { row: newRowIndex, col: columns[newColIndex] }
+      setSelectedCell(newSelectedCell)
+      scrollToCell(newRowIndex, newColIndex)
+    }
+  }, [selectedCell, editedData, columns, scrollToCell])
 
   // Keyboard shortcuts and navigation
   useEffect(() => {
@@ -393,8 +375,8 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
         return
       }
 
-      // Only handle navigation in Data View tab and if no dialogs are open and not editing
-      if (activeTab === 'data' && !findDialogOpen && !replaceDialogOpen && !editingCell) {
+      // Handle navigation in both Data and Variable views unless dialogs are open or editing
+      if (!findDialogOpen && !replaceDialogOpen && !editingCell) {
         // Check if focus is on an input element (for variable view compatibility)
         const activeElement = document.activeElement
         if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'SELECT') {
@@ -445,7 +427,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [handleCellNavigation, findDialogOpen, replaceDialogOpen, editingCell, selectedCell, editedData, activeTab])
+  }, [handleCellNavigation, findDialogOpen, replaceDialogOpen, editingCell, selectedCell, editedData])
 
   const navigateToMatch = (direction: 'next' | 'prev') => {
     if (foundMatches.length === 0) return
@@ -579,24 +561,24 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
   return (
     <div className="w-full h-full flex flex-col bg-background">
       <div className="w-full h-full bg-background flex flex-col">
-        <div className="flex items-center justify-between p-2 border-b">
+        <div className="flex items-center justify-between p-1 border-b">
           <div className="flex items-center gap-2">
             <Database className="h-4 w-4" />
-            <h2 className="text-sm font-semibold">SPSS Data View - {file.name}</h2>
-            <Badge variant="outline" className="text-xs">{editedData.length} rows × {columns.length} columns</Badge>
+            <h2 className="text-xs font-semibold">SPSS Data View - {file.name}</h2>
+            <Badge variant="outline" className="text-xs h-5 px-1">{editedData.length} × {columns.length}</Badge>
           </div>
           <div className="flex items-center gap-1">
-            <Button onClick={exportData} variant="outline" size="sm" className="h-7 text-xs">
+            <Button onClick={exportData} variant="outline" size="sm" className="h-6 text-xs px-2">
               <Download className="h-3 w-3 mr-1" />
               Export
             </Button>
-            <Button onClick={saveChanges} variant="outline" size="sm" className="h-7 text-xs">
+            <Button onClick={saveChanges} variant="outline" size="sm" className="h-6 text-xs px-2">
               <Save className="h-3 w-3 mr-1" />
               Save
             </Button>
             <Dialog open={findDialogOpen} onOpenChange={setFindDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-7 text-xs">
+                <Button variant="outline" size="sm" className="h-6 text-xs px-2">
                   <Search className="h-3 w-3 mr-1" />
                   Find
                 </Button>
@@ -652,7 +634,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
             </Dialog>
             <Dialog open={replaceDialogOpen} onOpenChange={setReplaceDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-7 text-xs">
+                <Button variant="outline" size="sm" className="h-6 text-xs px-2">
                   <Replace className="h-3 w-3 mr-1" />
                   Replace
                 </Button>
@@ -714,20 +696,20 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button onClick={onClose} variant="ghost" size="sm" className="h-7 text-xs">
+            <Button onClick={onClose} variant="ghost" size="sm" className="h-6 text-xs px-2">
               Close
             </Button>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'data' | 'variable')} className="flex-1 flex flex-col">
-          <div className="px-2 pt-1">
-            <TabsList className="h-8">
-              <TabsTrigger value="data" className="flex items-center gap-1 h-6 text-xs">
+          <div className="px-1 py-0">
+            <TabsList className="h-7 p-0">
+              <TabsTrigger value="data" className="flex items-center gap-1 h-6 text-xs px-2">
                 <Database className="h-3 w-3" />
                 Data View
               </TabsTrigger>
-              <TabsTrigger value="variable" className="flex items-center gap-1 h-6 text-xs">
+              <TabsTrigger value="variable" className="flex items-center gap-1 h-6 text-xs px-2">
                 <Variable className="h-3 w-3" />
                 Variable View
               </TabsTrigger>
@@ -735,12 +717,12 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
           </div>
 
           <TabsContent value="data" className="flex-1 flex flex-col overflow-hidden">
-            <div className="p-2 border-b flex gap-2">
-              <Button onClick={addNewRow} size="sm" variant="outline" className="h-7 text-xs">
+            <div className="p-1 border-b flex gap-1">
+              <Button onClick={addNewRow} size="sm" variant="outline" className="h-6 text-xs px-2">
                 <Plus className="h-3 w-3 mr-1" />
                 Add Row
               </Button>
-              <Button onClick={addNewVariable} size="sm" variant="outline" className="h-7 text-xs">
+              <Button onClick={addNewVariable} size="sm" variant="outline" className="h-6 text-xs px-2">
                 <Plus className="h-3 w-3 mr-1" />
                 Add Variable
               </Button>
@@ -748,7 +730,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
             
             <div 
               className="flex-1" 
-              style={{ overflow: 'auto', height: 'calc(100vh - 120px)' }}
+              style={{ overflow: 'auto', height: 'calc(100vh - 60px)' }}
               data-table-container
               tabIndex={0}
               onClick={() => {
@@ -819,7 +801,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
           </TabsContent>
 
           <TabsContent value="variable" className="flex-1 flex flex-col overflow-hidden mt-0">
-            <div className="flex-1" style={{ overflow: 'auto', height: 'calc(100vh - 90px)' }}>
+            <div className="flex-1" style={{ overflow: 'auto', height: 'calc(100vh - 60px)' }}>
               <div style={{ minWidth: 'max-content', overflowX: 'auto' }}>
                 <table className="border-collapse w-full" style={{ minWidth: '100%', tableLayout: 'auto' }}>
                   <thead className="sticky top-0 bg-background z-10">
