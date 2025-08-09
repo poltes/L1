@@ -54,6 +54,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
   const [caseSensitive, setCaseSensitive] = useState(false)
   const [foundMatches, setFoundMatches] = useState<{ row: number; col: string }[]>([])
   const [currentMatch, setCurrentMatch] = useState(0)
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: string } | null>(null)
 
   // Initialize data and variables
   useEffect(() => {
@@ -122,6 +123,8 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     setEditedData(newData)
     setEditingCell(null)
     setCellValue('')
+    // Maintain cell selection after editing
+    setSelectedCell({ row: rowIndex, col: column })
   }
 
   const handleVariableUpdate = (columnName: string, updates: Partial<VariableInfo>) => {
@@ -294,22 +297,114 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     }
   }, [findText, replaceText, editedData, columns, caseSensitive, currentMatch, foundMatches, handleFind])
 
-  // Keyboard shortcuts
+  // Keyboard navigation
+  const handleCellNavigation = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
+    if (!selectedCell || editedData.length === 0) return
+
+    const currentRowIndex = selectedCell.row
+    const currentColIndex = columns.indexOf(selectedCell.col)
+    
+    let newRowIndex = currentRowIndex
+    let newColIndex = currentColIndex
+
+    switch (direction) {
+      case 'up':
+        newRowIndex = Math.max(0, currentRowIndex - 1)
+        break
+      case 'down':
+        newRowIndex = Math.min(editedData.length - 1, currentRowIndex + 1)
+        break
+      case 'left':
+        newColIndex = Math.max(0, currentColIndex - 1)
+        break
+      case 'right':
+        newColIndex = Math.min(columns.length - 1, currentColIndex + 1)
+        break
+    }
+
+    if (newRowIndex !== currentRowIndex || newColIndex !== currentColIndex) {
+      const newSelectedCell = { row: newRowIndex, col: columns[newColIndex] }
+      setSelectedCell(newSelectedCell)
+      
+      // Scroll to the new cell if it's out of view
+      scrollToCell(newRowIndex, newColIndex)
+    }
+  }, [selectedCell, editedData, columns])
+
+  const scrollToCell = (rowIndex: number, colIndex: number) => {
+    const tableContainer = document.querySelector('[data-table-container]')
+    if (!tableContainer) return
+
+    // Calculate cell position and scroll if needed
+    const cellElement = tableContainer.querySelector(
+      `[data-cell-row="${rowIndex}"][data-cell-col="${columns[colIndex]}"]`
+    )
+    
+    if (cellElement) {
+      cellElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest'
+      })
+    }
+  }
+
+  // Keyboard shortcuts and navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Handle find/replace shortcuts
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
         setFindDialogOpen(true)
+        return
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
         e.preventDefault()
         setReplaceDialogOpen(true)
+        return
+      }
+
+      // Handle arrow key navigation only if no dialogs are open and not editing
+      if (!findDialogOpen && !replaceDialogOpen && !editingCell) {
+        switch (e.key) {
+          case 'ArrowUp':
+            e.preventDefault()
+            handleCellNavigation('up')
+            break
+          case 'ArrowDown':
+            e.preventDefault()
+            handleCellNavigation('down')
+            break
+          case 'ArrowLeft':
+            e.preventDefault()
+            handleCellNavigation('left')
+            break
+          case 'ArrowRight':
+            e.preventDefault()
+            handleCellNavigation('right')
+            break
+          case 'Enter':
+            if (selectedCell) {
+              e.preventDefault()
+              setEditingCell(selectedCell)
+              setCellValue(String(editedData[selectedCell.row][selectedCell.col] || ''))
+            }
+            break
+          case 'Tab':
+            e.preventDefault()
+            if (e.shiftKey) {
+              handleCellNavigation('left')
+            } else {
+              handleCellNavigation('right')
+            }
+            break
+        }
       }
     }
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [handleCellNavigation, findDialogOpen, replaceDialogOpen, editingCell, selectedCell, editedData])
 
   const navigateToMatch = (direction: 'next' | 'prev') => {
     if (foundMatches.length === 0) return
@@ -501,7 +596,17 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
               </Button>
             </div>
             
-            <div className="flex-1" style={{ overflow: 'auto', height: 'calc(100vh - 200px)' }}>
+            <div 
+              className="flex-1" 
+              style={{ overflow: 'auto', height: 'calc(100vh - 200px)' }}
+              data-table-container
+              tabIndex={0}
+              onClick={() => {
+                if (!selectedCell && editedData.length > 0 && columns.length > 0) {
+                  setSelectedCell({ row: 0, col: columns[0] })
+                }
+              }}
+            >
               <div style={{ minWidth: 'max-content', overflowX: 'auto' }}>
                 <table className="border-collapse" style={{ minWidth: '100%', tableLayout: 'auto' }}>
                   <thead className="sticky top-0 bg-background z-10 border-b">
@@ -532,16 +637,22 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                         {columns.map(column => {
                           const isHighlighted = isMatchHighlighted(rowIndex, column)
                           const isCurrent = isCurrentMatch(rowIndex, column)
+                          const isSelected = selectedCell?.row === rowIndex && selectedCell?.col === column
                           return (
                             <td 
                               key={column} 
+                              data-cell-row={rowIndex}
+                              data-cell-col={column}
                               className={`p-1 font-mono text-xs cursor-pointer border-r hover:bg-blue-50 dark:hover:bg-blue-900/20 ${
                                 isHighlighted ? 'bg-yellow-200 dark:bg-yellow-900/30' : ''
                               } ${
                                 isCurrent ? 'ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/50' : ''
+                              } ${
+                                isSelected && !editingCell ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-900/20' : ''
                               }`}
                               style={{ minWidth: '150px', width: `${variables[column]?.width * 8 || 150}px` }}
                               onClick={() => {
+                                setSelectedCell({ row: rowIndex, col: column })
                                 setEditingCell({ row: rowIndex, col: column })
                                 setCellValue(String(row[column] || ''))
                               }}
