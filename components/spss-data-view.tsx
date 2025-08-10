@@ -58,7 +58,6 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
   const [foundMatches, setFoundMatches] = useState<{ row: number; col: string }[]>([])
   const [currentMatch, setCurrentMatch] = useState(0)
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: string } | null>(null)
-  const [navigationThrottle, setNavigationThrottle] = useState<NodeJS.Timeout | null>(null)
   const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>({})
   const [isResizing, setIsResizing] = useState<string | null>(null)
   const resizeStartX = useRef<number>(0)
@@ -321,14 +320,14 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     
     if (cellElement) {
       cellElement.scrollIntoView({
-        behavior: 'auto',
-        block: 'center',
-        inline: 'center'
+        behavior: 'instant',
+        block: 'nearest',
+        inline: 'nearest'
       })
     }
   }, [columns])
 
-  // Ultra-fast keyboard navigation with immediate response
+  // Ultra-fast keyboard navigation with immediate response  
   const handleCellNavigation = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     if (!selectedCell || editedData.length === 0) return
     
@@ -356,12 +355,12 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     if (newRowIndex !== currentRowIndex || newColIndex !== currentColIndex) {
       const newSelectedCell = { row: newRowIndex, col: columns[newColIndex] }
       setSelectedCell(newSelectedCell)
-      // Use requestAnimationFrame for the smoothest possible scrolling
-      requestAnimationFrame(() => scrollToCell(newRowIndex, newColIndex))
+      // Immediate scrolling for instant response
+      scrollToCell(newRowIndex, newColIndex)
     }
   }, [selectedCell, editedData, columns, scrollToCell])
 
-  // Keyboard shortcuts and navigation
+  // Keyboard shortcuts and navigation - simplified for maximum performance
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Handle find/replace shortcuts
@@ -376,18 +375,17 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
         return
       }
 
-      // Only handle navigation in Data View for smooth performance
-      if (activeTab === 'data' && !findDialogOpen && !replaceDialogOpen && !editingCell) {
-        // Check if focus is on an input element
+      // Navigation works in both Data and Variable View for consistent experience
+      if (!findDialogOpen && !replaceDialogOpen && !editingCell) {
+        // Skip navigation if user is typing in an input field
         const activeElement = document.activeElement
         if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'SELECT' || activeElement?.tagName === 'TEXTAREA') {
-          return // Don't interfere with form inputs
+          return
         }
 
-        // Arrow key navigation - immediate response
+        // Instant arrow key navigation
         if (e.key.startsWith('Arrow')) {
           e.preventDefault()
-          e.stopImmediatePropagation()
           
           switch (e.key) {
             case 'ArrowUp':
@@ -403,14 +401,12 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
               handleCellNavigation('right')
               break
           }
-        } else if (e.key === 'Enter' && selectedCell) {
+        } else if (e.key === 'Enter' && selectedCell && activeTab === 'data') {
           e.preventDefault()
-          e.stopImmediatePropagation()
           setEditingCell(selectedCell)
           setCellValue(String(editedData[selectedCell.row][selectedCell.col] || ''))
         } else if (e.key === 'Tab') {
           e.preventDefault()
-          e.stopImmediatePropagation()
           if (e.shiftKey) {
             handleCellNavigation('left')
           } else {
@@ -725,7 +721,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
             
             <div 
               className="flex-1" 
-              style={{ overflow: 'auto', height: 'calc(100vh - 60px)' }}
+              style={{ overflow: 'auto', height: 'calc(100vh - 80px)' }}
               data-table-container
               tabIndex={0}
               onClick={() => {
@@ -796,7 +792,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
           </TabsContent>
 
           <TabsContent value="variable" className="flex-1 flex flex-col overflow-hidden mt-0">
-            <div className="flex-1" style={{ overflow: 'auto', height: 'calc(100vh - 60px)' }}>
+            <div className="flex-1" style={{ overflow: 'auto', height: 'calc(100vh - 80px)' }}>
               <div style={{ minWidth: 'max-content', overflowX: 'auto' }}>
                 <table className="border-collapse w-full" style={{ minWidth: '100%', tableLayout: 'auto' }}>
                   <thead className="sticky top-0 bg-background z-10">
