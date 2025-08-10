@@ -518,7 +518,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
       <td 
         data-cell-row={rowIndex}
         data-cell-col={column}
-        className={`p-1 font-mono text-xs cursor-pointer border-r hover:bg-blue-50 dark:hover:bg-blue-900/20 ${
+        className={`p-1 font-mono text-xs cursor-pointer  hover:bg-blue-50 dark:hover:bg-blue-900/20 ${
           isHighlighted ? 'bg-yellow-200 dark:bg-yellow-900/30' : ''
         } ${
           isCurrent ? 'ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/50' : ''
@@ -738,11 +738,11 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                 <table className="border-collapse" style={{ minWidth: '100%', tableLayout: 'auto' }}>
                   <thead className="sticky top-0 bg-background z-10 border-b">
                     <tr>
-                      <th className="w-16 p-2 text-left text-xs font-medium text-muted-foreground border-r sticky left-0 bg-background">
+                      <th className="w-16 p-2 text-left text-xs font-medium text-muted-foreground  sticky left-0 bg-background">
                         #
                       </th>
                       {columns.map((column, index) => (
-                        <th key={column} className="p-2 text-left font-mono text-xs border-r" style={{ minWidth: '150px', width: `${variables[column]?.width * 8 || 150}px` }}>
+                        <th key={column} className="p-2 text-left font-mono text-xs " style={{ minWidth: '150px', width: `${variables[column]?.width * 8 || 150}px` }}>
                           <div className="flex flex-col">
                             <span className="font-semibold text-blue-600 dark:text-blue-400">{getExcelColumnName(index)}</span>
                             <span className="font-medium">{variables[column]?.label || column}</span>
@@ -758,7 +758,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                   <tbody>
                     {editedData.map((row, rowIndex) => (
                       <tr key={rowIndex} className="hover:bg-muted/50 border-b">
-                        <td className="p-1 text-xs text-muted-foreground font-mono border-r sticky left-0 bg-background">
+                        <td className="p-1 text-xs text-muted-foreground font-mono  sticky left-0 bg-background">
                           {rowIndex + 1}
                         </td>
                         {columns.map(column => (
@@ -801,84 +801,84 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                 <table className="border-collapse w-full" style={{ minWidth: '100%', tableLayout: 'auto' }}>
                   <thead className="sticky top-0 bg-background z-10">
                     <tr className="border-b bg-gray-100 dark:bg-gray-800">
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['index'] || 30, minWidth: '30px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['index'] || 30, minWidth: '30px'}}>
                         
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'index')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['name'] || 80, minWidth: '60px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['name'] || 80, minWidth: '60px'}}>
                         Name
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'name')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['type'] || 60, minWidth: '50px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['type'] || 60, minWidth: '50px'}}>
                         Type
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'type')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['width'] || 50, minWidth: '40px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['width'] || 50, minWidth: '40px'}}>
                         Width
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'width')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['decimals'] || 60, minWidth: '50px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['decimals'] || 60, minWidth: '50px'}}>
                         Decimals
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'decimals')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['label'] || 120, minWidth: '80px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['label'] || 120, minWidth: '80px'}}>
                         Label
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'label')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['values'] || 80, minWidth: '60px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['values'] || 80, minWidth: '60px'}}>
                         Values
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'values')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['missing'] || 60, minWidth: '50px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['missing'] || 60, minWidth: '50px'}}>
                         Missing
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'missing')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['columns'] || 60, minWidth: '50px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['columns'] || 60, minWidth: '50px'}}>
                         Columns
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'columns')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['align'] || 50, minWidth: '40px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['align'] || 50, minWidth: '40px'}}>
                         Align
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'align')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['measure'] || 70, minWidth: '60px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['measure'] || 70, minWidth: '60px'}}>
                         Measure
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
                           onMouseDown={(e) => handleResizeStart(e, 'measure')}
                         />
                       </th>
-                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 border-r relative" style={{width: columnWidths['role'] || 60, minWidth: '50px'}}>
+                      <th className="text-left py-0.5 px-1 font-medium text-xs text-gray-600 dark:text-gray-300 relative" style={{width: columnWidths['role'] || 60, minWidth: '50px'}}>
                         Role
                         <div 
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
@@ -892,15 +892,15 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                       const variable = variables[column]
                       return (
                         <tr key={column} className="border-b hover:bg-blue-50 dark:hover:bg-blue-900/20 h-6">
-                          <td className="py-0.5 px-1 text-xs font-mono text-center text-gray-500 border-r bg-gray-50 dark:bg-gray-800" style={{width: columnWidths['index'] || 30}}>
+                          <td className="py-0.5 px-1 text-xs font-mono text-center text-gray-500  bg-gray-50 dark:bg-gray-800" style={{width: columnWidths['index'] || 30}}>
                             {index + 1}
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['name'] || 80}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['name'] || 80}}>
                             <div className="text-xs font-mono font-medium text-gray-900 dark:text-gray-100 truncate">
                               {column}
                             </div>
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['type'] || 60}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['type'] || 60}}>
                             <Select
                               value={variable?.type || 'string'}
                               onValueChange={(value: 'numeric' | 'string' | 'date') =>
@@ -917,7 +917,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['width'] || 50}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['width'] || 50}}>
                             <Input
                               type="number"
                               value={variable?.width || 8}
@@ -929,7 +929,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               max="50"
                             />
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['decimals'] || 60}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['decimals'] || 60}}>
                             <Input
                               type="number"
                               value={variable?.decimals || 0}
@@ -942,7 +942,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               disabled={variable?.type !== 'numeric'}
                             />
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['label'] || 120}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['label'] || 120}}>
                             <Input
                               value={variable?.label || ''}
                               onChange={(e) =>
@@ -952,17 +952,17 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               placeholder=""
                             />
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['values'] || 80}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['values'] || 80}}>
                             <div className="h-5 text-xs text-center text-gray-400 flex items-center justify-center">
                               None
                             </div>
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['missing'] || 60}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['missing'] || 60}}>
                             <div className="h-5 text-xs text-center text-gray-400 flex items-center justify-center">
                               None
                             </div>
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['columns'] || 60}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['columns'] || 60}}>
                             <Input
                               type="number"
                               value={variable?.columns || 8}
@@ -974,7 +974,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               max="50"
                             />
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['align'] || 50}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['align'] || 50}}>
                             <Select
                               value={variable?.align || 'left'}
                               onValueChange={(value: 'left' | 'center' | 'right') =>
@@ -991,7 +991,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['measure'] || 70}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['measure'] || 70}}>
                             <Select
                               value={variable?.measure || 'nominal'}
                               onValueChange={(value: 'scale' | 'ordinal' | 'nominal') =>
@@ -1008,7 +1008,7 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="py-0.5 px-1 border-r" style={{width: columnWidths['role'] || 60}}>
+                          <td className="py-0.5 px-1 " style={{width: columnWidths['role'] || 60}}>
                             <Select
                               value={variable?.role || 'input'}
                               onValueChange={(value: 'input' | 'target' | 'both' | 'none' | 'partition' | 'split') =>

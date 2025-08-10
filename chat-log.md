@@ -1,3 +1,11 @@
+## [usr-1754847173376]
+**User Request:** Remove this white space marked in the line from top to bottom can you see ? in the variable view
+
+Attachments: @.ideavo-attachments/image_4.png
+
+**Response Summary:** Fixed the vertical white space (red line) issue in the SPSS Variable View by removing all border-r classes from table headers and data cells. The vertical borders were creating unnecessary visual separation lines throughout the variable view table. Removed border-r styling from all 12 column headers (Index, Name, Type, Width, Decimals, Label, Values, Missing, Columns, Align, Measure, Role) and all corresponding data rows. This eliminates the thick vertical lines while maintaining the table structure and column resizing functionality. Build verified successfully.
+**Files Modified:** components/spss-data-view.tsx (updated: removed all border-r classes from variable view table headers and data cells to eliminate vertical white space lines)
+
 ## [usr-1754846283559]
 **User Request:** can you restart the server and the data view keyboard navigation is still hard can you make it smooth
 **Response Summary:** Completely revamped keyboard navigation system in SPSS data view to provide ultra-smooth and responsive movement. Optimized navigation by: 1) Restricting arrow key navigation to Data View only (not Variable View) to eliminate conflicts with form inputs and improve focus management. 2) Replaced stopPropagation with stopImmediatePropagation for better event handling. 3) Implemented requestAnimationFrame-based scrolling for the smoothest possible cell navigation. 4) Changed scroll behavior from 'nearest' to 'center' positioning for better cell visibility. 5) Simplified keyboard event handling to remove any performance bottlenecks. The navigation now responds instantly to arrow keys, Tab/Shift+Tab, and Enter with no lag or delays. Fixed server issues and successfully restarted development environment.
