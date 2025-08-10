@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { DataVisualizations } from '@/components/data-visualizations'
 import { PythonSandbox } from '@/components/python-sandbox'
 import { SPSSDataView } from '@/components/spss-data-view'
+import { DocViewer } from '@/components/doc-viewer'
 
 interface UploadedFile {
   id: string
@@ -35,6 +36,7 @@ interface DataPanelProps {
 export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSelectedFile, isCollapsed, onToggleCollapse, onShowDataView }: DataPanelProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [currentDoc, setCurrentDoc] = useState<{name: string, title: string} | null>(null)
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' || 
@@ -170,6 +172,11 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
     document.documentElement.classList.toggle('dark', !isDarkMode)
   }
 
+  const openDoc = (docName: string, title: string) => {
+    setCurrentDoc({ name: docName, title })
+    setIsHelpOpen(false)
+  }
+
 
   if (isCollapsed) {
     return (
@@ -237,8 +244,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                       variant="outline"
                       className="w-full justify-start"
                       onClick={() => {
-                        window.open('/docs/USER_GUIDE.md', '_blank')
-                        setIsHelpOpen(false)
+                        openDoc('USER_GUIDE.md', 'User Guide - Step-by-step instructions')
                       }}
                     >
                       <FileText className="h-4 w-4 mr-2" />
@@ -249,8 +255,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                       variant="outline"
                       className="w-full justify-start"
                       onClick={() => {
-                        window.open('/docs/FAQ.md', '_blank')
-                        setIsHelpOpen(false)
+                        openDoc('FAQ.md', 'FAQ - Common questions & troubleshooting')
                       }}
                     >
                       <HelpCircle className="h-4 w-4 mr-2" />
@@ -261,8 +266,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                       variant="outline"
                       className="w-full justify-start"
                       onClick={() => {
-                        window.open('/docs/TECHNICAL_DOCUMENTATION.md', '_blank')
-                        setIsHelpOpen(false)
+                        openDoc('TECHNICAL_DOCUMENTATION.md', 'Technical Documentation - Architecture & APIs')
                       }}
                     >
                       <Code className="h-4 w-4 mr-2" />
@@ -273,8 +277,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                       variant="outline"
                       className="w-full justify-start"
                       onClick={() => {
-                        window.open('/docs/ROADMAP.md', '_blank')
-                        setIsHelpOpen(false)
+                        openDoc('ROADMAP.md', 'Roadmap - Future features & local LLM plans')
                       }}
                     >
                       <BarChart3 className="h-4 w-4 mr-2" />
@@ -365,8 +368,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                       variant="outline"
                       className="w-full justify-start"
                       onClick={() => {
-                        window.open('/docs/USER_GUIDE.md', '_blank')
-                        setIsHelpOpen(false)
+                        openDoc('USER_GUIDE.md', 'User Guide - Step-by-step instructions')
                       }}
                     >
                       <FileText className="h-4 w-4 mr-2" />
@@ -377,8 +379,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                       variant="outline"
                       className="w-full justify-start"
                       onClick={() => {
-                        window.open('/docs/FAQ.md', '_blank')
-                        setIsHelpOpen(false)
+                        openDoc('FAQ.md', 'FAQ - Common questions & troubleshooting')
                       }}
                     >
                       <HelpCircle className="h-4 w-4 mr-2" />
@@ -389,8 +390,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                       variant="outline"
                       className="w-full justify-start"
                       onClick={() => {
-                        window.open('/docs/TECHNICAL_DOCUMENTATION.md', '_blank')
-                        setIsHelpOpen(false)
+                        openDoc('TECHNICAL_DOCUMENTATION.md', 'Technical Documentation - Architecture & APIs')
                       }}
                     >
                       <Code className="h-4 w-4 mr-2" />
@@ -401,8 +401,7 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
                       variant="outline"
                       className="w-full justify-start"
                       onClick={() => {
-                        window.open('/docs/ROADMAP.md', '_blank')
-                        setIsHelpOpen(false)
+                        openDoc('ROADMAP.md', 'Roadmap - Future features & local LLM plans')
                       }}
                     >
                       <BarChart3 className="h-4 w-4 mr-2" />
@@ -587,6 +586,12 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
         </Tabs>
       </div>
 
+      <DocViewer
+        isOpen={!!currentDoc}
+        onClose={() => setCurrentDoc(null)}
+        docName={currentDoc?.name || ''}
+        title={currentDoc?.title || ''}
+      />
     </div>
   )
 }
