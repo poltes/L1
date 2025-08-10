@@ -322,13 +322,13 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     if (cellElement) {
       cellElement.scrollIntoView({
         behavior: 'auto',
-        block: 'nearest',
-        inline: 'nearest'
+        block: 'center',
+        inline: 'center'
       })
     }
   }, [columns])
 
-  // Instant keyboard navigation - no throttling for smooth performance
+  // Ultra-fast keyboard navigation with immediate response
   const handleCellNavigation = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     if (!selectedCell || editedData.length === 0) return
     
@@ -356,7 +356,8 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
     if (newRowIndex !== currentRowIndex || newColIndex !== currentColIndex) {
       const newSelectedCell = { row: newRowIndex, col: columns[newColIndex] }
       setSelectedCell(newSelectedCell)
-      scrollToCell(newRowIndex, newColIndex)
+      // Use requestAnimationFrame for the smoothest possible scrolling
+      requestAnimationFrame(() => scrollToCell(newRowIndex, newColIndex))
     }
   }, [selectedCell, editedData, columns, scrollToCell])
 
@@ -375,59 +376,53 @@ export function SPSSDataView({ file, onClose, onSave }: SPSSDataViewProps) {
         return
       }
 
-      // Handle navigation in both Data and Variable views unless dialogs are open or editing
-      if (!findDialogOpen && !replaceDialogOpen && !editingCell) {
-        // Check if focus is on an input element (for variable view compatibility)
+      // Only handle navigation in Data View for smooth performance
+      if (activeTab === 'data' && !findDialogOpen && !replaceDialogOpen && !editingCell) {
+        // Check if focus is on an input element
         const activeElement = document.activeElement
-        if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'SELECT') {
+        if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'SELECT' || activeElement?.tagName === 'TEXTAREA') {
           return // Don't interfere with form inputs
         }
 
-        switch (e.key) {
-          case 'ArrowUp':
-            e.preventDefault()
-            e.stopPropagation()
-            handleCellNavigation('up')
-            break
-          case 'ArrowDown':
-            e.preventDefault()
-            e.stopPropagation()
-            handleCellNavigation('down')
-            break
-          case 'ArrowLeft':
-            e.preventDefault()
-            e.stopPropagation()
-            handleCellNavigation('left')
-            break
-          case 'ArrowRight':
-            e.preventDefault()
-            e.stopPropagation()
-            handleCellNavigation('right')
-            break
-          case 'Enter':
-            if (selectedCell) {
-              e.preventDefault()
-              e.stopPropagation()
-              setEditingCell(selectedCell)
-              setCellValue(String(editedData[selectedCell.row][selectedCell.col] || ''))
-            }
-            break
-          case 'Tab':
-            e.preventDefault()
-            e.stopPropagation()
-            if (e.shiftKey) {
+        // Arrow key navigation - immediate response
+        if (e.key.startsWith('Arrow')) {
+          e.preventDefault()
+          e.stopImmediatePropagation()
+          
+          switch (e.key) {
+            case 'ArrowUp':
+              handleCellNavigation('up')
+              break
+            case 'ArrowDown':
+              handleCellNavigation('down')
+              break
+            case 'ArrowLeft':
               handleCellNavigation('left')
-            } else {
+              break
+            case 'ArrowRight':
               handleCellNavigation('right')
-            }
-            break
+              break
+          }
+        } else if (e.key === 'Enter' && selectedCell) {
+          e.preventDefault()
+          e.stopImmediatePropagation()
+          setEditingCell(selectedCell)
+          setCellValue(String(editedData[selectedCell.row][selectedCell.col] || ''))
+        } else if (e.key === 'Tab') {
+          e.preventDefault()
+          e.stopImmediatePropagation()
+          if (e.shiftKey) {
+            handleCellNavigation('left')
+          } else {
+            handleCellNavigation('right')
+          }
         }
       }
     }
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [handleCellNavigation, findDialogOpen, replaceDialogOpen, editingCell, selectedCell, editedData])
+  }, [handleCellNavigation, findDialogOpen, replaceDialogOpen, editingCell, selectedCell, editedData, activeTab])
 
   const navigateToMatch = (direction: 'next' | 'prev') => {
     if (foundMatches.length === 0) return
