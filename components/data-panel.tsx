@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Upload, FileText, Database, Trash2, Eye, BarChart3, Code, Menu, Sun, Moon, Settings, Bot, Table } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Upload, FileText, Database, Trash2, Eye, BarChart3, Code, Menu, Sun, Moon, Settings, Bot, Table, HelpCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { DataVisualizations } from '@/components/data-visualizations'
 import { PythonSandbox } from '@/components/python-sandbox'
@@ -33,6 +34,7 @@ interface DataPanelProps {
 
 export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSelectedFile, isCollapsed, onToggleCollapse, onShowDataView }: DataPanelProps) {
   const [isDragging, setIsDragging] = useState(false)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' || 
@@ -208,6 +210,91 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
             >
               <Settings className="h-4 w-4" />
             </Button>
+            <Dialog open={isHelpOpen} onOpenChange={setIsHelpOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-8 h-8 p-0"
+                  title="Help & Documentation"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5" />
+                    Help & Documentation
+                  </DialogTitle>
+                  <DialogDescription>
+                    Access comprehensive documentation and guides for using Nemo effectively.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-3">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        window.open('/docs/USER_GUIDE.md', '_blank')
+                        setIsHelpOpen(false)
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      User Guide - Step-by-step instructions
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        window.open('/docs/FAQ.md', '_blank')
+                        setIsHelpOpen(false)
+                      }}
+                    >
+                      <HelpCircle className="h-4 w-4 mr-2" />
+                      FAQ - Common questions & troubleshooting
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        window.open('/docs/TECHNICAL_DOCUMENTATION.md', '_blank')
+                        setIsHelpOpen(false)
+                      }}
+                    >
+                      <Code className="h-4 w-4 mr-2" />
+                      Technical Documentation - Architecture & APIs
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        window.open('/docs/ROADMAP.md', '_blank')
+                        setIsHelpOpen(false)
+                      }}
+                    >
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Roadmap - Future features & local LLM plans
+                    </Button>
+                  </div>
+                  
+                  <div className="border-t pt-3 text-sm text-muted-foreground">
+                    <p className="font-medium mb-2">Quick Start Tips:</p>
+                    <ul className="space-y-1 text-xs">
+                      <li>• Upload CSV, JSON, or Excel files to get started</li>
+                      <li>• Click any file to activate AI-powered analysis</li>
+                      <li>• Use the table icon to open professional data editor</li>
+                      <li>• Try the Python sandbox for custom analysis</li>
+                      <li>• Configure your Gemini API key for AI features</li>
+                    </ul>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center p-2">
@@ -251,6 +338,91 @@ export function DataPanel({ uploadedFiles, setUploadedFiles, selectedFile, setSe
             >
               <Settings className="h-4 w-4" />
             </Button>
+            <Dialog open={isHelpOpen} onOpenChange={setIsHelpOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-8 h-8 p-0"
+                  title="Help & Documentation"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5" />
+                    Help & Documentation
+                  </DialogTitle>
+                  <DialogDescription>
+                    Access comprehensive documentation and guides for using Nemo effectively.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-3">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        window.open('/docs/USER_GUIDE.md', '_blank')
+                        setIsHelpOpen(false)
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      User Guide - Step-by-step instructions
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        window.open('/docs/FAQ.md', '_blank')
+                        setIsHelpOpen(false)
+                      }}
+                    >
+                      <HelpCircle className="h-4 w-4 mr-2" />
+                      FAQ - Common questions & troubleshooting
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        window.open('/docs/TECHNICAL_DOCUMENTATION.md', '_blank')
+                        setIsHelpOpen(false)
+                      }}
+                    >
+                      <Code className="h-4 w-4 mr-2" />
+                      Technical Documentation - Architecture & APIs
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        window.open('/docs/ROADMAP.md', '_blank')
+                        setIsHelpOpen(false)
+                      }}
+                    >
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Roadmap - Future features & local LLM plans
+                    </Button>
+                  </div>
+                  
+                  <div className="border-t pt-3 text-sm text-muted-foreground">
+                    <p className="font-medium mb-2">Quick Start Tips:</p>
+                    <ul className="space-y-1 text-xs">
+                      <li>• Upload CSV, JSON, or Excel files to get started</li>
+                      <li>• Click any file to activate AI-powered analysis</li>
+                      <li>• Use the table icon to open professional data editor</li>
+                      <li>• Try the Python sandbox for custom analysis</li>
+                      <li>• Configure your Gemini API key for AI features</li>
+                    </ul>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button
               variant="ghost"
               size="sm"

@@ -182,23 +182,57 @@ This project is built with modern best practices:
 
 This project is licensed under the MIT License.
 
+## 📚 Documentation
+
+Comprehensive documentation is available to help you get the most out of Nemo:
+
+### 📖 User Resources
+- **[User Guide](docs/USER_GUIDE.md)** - Complete step-by-step instructions for all features
+- **[FAQ](docs/FAQ.md)** - Frequently asked questions and troubleshooting
+- **[Quick Help](help)** - Click the help icon (?) in the app for instant access
+
+### 🔧 Developer Resources  
+- **[Technical Documentation](docs/TECHNICAL_DOCUMENTATION.md)** - Architecture, data flow, and APIs
+- **[Roadmap](docs/ROADMAP.md)** - Future features and local LLM integration plans
+
+### 🚀 Getting Help
+- **In-App Help**: Click the help icon (?) in the left panel for quick access to all documentation
+- **Interactive Tooltips**: Hover over features for contextual help
+- **Quick Start Tips**: Built-in guidance for new users
+
 ## 🆘 Support
 
 If you encounter any issues:
-1. Check the `/env-check` route for configuration issues
-2. Ensure your API key is correctly set (if using AI features)
-3. Try with a smaller dataset first
-4. Check browser console for error messages
+1. **Check Documentation**: Start with the [FAQ](docs/FAQ.md) and [User Guide](docs/USER_GUIDE.md)
+2. **Use In-App Help**: Click the help icon (?) for instant access to guides
+3. **Configuration Issues**: Check the `/env-check` route for environment problems
+4. **API Problems**: Ensure your Gemini API key is correctly configured
+5. **Performance Issues**: Try with a smaller dataset first
+6. **Browser Console**: Check for error messages (F12 key)
 
 ## 🔮 Future Enhancements
 
-- **Database Integration**: Persistent storage for uploaded files
-- **User Authentication**: Multi-user support with Supabase Auth
-- **Advanced Visualizations**: More chart types and customization
-- **Export Features**: Download analysis results and charts
-- **Collaborative Features**: Share datasets and insights
-- **API Integration**: Connect to external data sources
-- **Machine Learning**: Predictive analytics and advanced modeling
+Nemo has an exciting roadmap ahead! Key upcoming features include:
+
+### Near-Term (v1.1-1.3)
+- **Enhanced Help System**: Interactive tutorials and contextual guidance
+- **Advanced Search & Filtering**: Global search and complex filters
+- **Collaboration Features**: Session sharing and real-time collaboration
+- **Professional Analytics**: Advanced statistical testing and business intelligence
+
+### Medium-Term (v2.0-2.5)
+- **Database Integration**: Persistent storage with PostgreSQL/Supabase
+- **User Authentication**: Multi-user workspaces and role-based access
+- **Local LLM Integration**: Privacy-focused offline AI analysis with Ollama
+- **Enterprise Features**: SSO, RBAC, and advanced security
+
+### Long-Term Vision (v3.0+)
+- **AI-Native Platform**: Autonomous analysis and intelligent insights
+- **Advanced Privacy**: Homomorphic encryption and federated learning
+- **Immersive Analytics**: AR/VR data visualization and exploration
+- **Global Ecosystem**: Marketplace, integrations, and community platform
+
+📋 **[View Complete Roadmap](docs/ROADMAP.md)** - Detailed timeline, local LLM plans, and technical architecture evolution
 
 ---
 
